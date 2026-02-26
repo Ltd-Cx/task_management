@@ -124,3 +124,15 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* ガントチャート（SVAR React Gantt） */
+.gantt-wrapper .gantt-weekend {
+  background-color: color-mix(in oklch, var(--color-muted) 30%, transparent);
+}
+.gantt-wrapper .wx-gantt {
+  height: 100%;
+}
+.gantt-wrapper .wx-progress,
+.gantt-wrapper .wx-progress-marker {
+  display: none;
+}

@@ -22,8 +22,11 @@ export function GanttBar({
   dayWidth,
   onResize,
 }: GanttBarProps) {
-  const start = new Date(task.startDate!);
-  const end = new Date(task.dueDate!);
+  // 日付が未設定の場合は表示しない
+  const hasDates = task.startDate != null && task.dueDate != null;
+
+  const start = hasDates ? new Date(task.startDate!) : new Date();
+  const end = hasDates ? new Date(task.dueDate!) : new Date();
   // 期限日を含むため+1日
   const endPlusOne = new Date(end);
   endPlusOne.setDate(endPlusOne.getDate() + 1);
@@ -34,10 +37,10 @@ export function GanttBar({
   const barStart = Math.max(start.getTime(), weekStart.getTime());
   const barEnd = Math.min(endPlusOne.getTime(), weekEnd.getTime());
 
-  if (barStart >= barEnd) return null;
+  const isVisible = hasDates && barStart < barEnd;
 
-  const leftPercent = ((barStart - weekStart.getTime()) / totalMs) * 100;
-  const widthPercent = ((barEnd - barStart) / totalMs) * 100;
+  const leftPercent = isVisible ? ((barStart - weekStart.getTime()) / totalMs) * 100 : 0;
+  const widthPercent = isVisible ? ((barEnd - barStart) / totalMs) * 100 : 0;
 
   const config = TASK_STATUS_CONFIG[task.status];
 
@@ -89,6 +92,8 @@ export function GanttBar({
     },
     [dayWidth, onResize, task.id]
   );
+
+  if (!isVisible) return null;
 
   return (
     <div

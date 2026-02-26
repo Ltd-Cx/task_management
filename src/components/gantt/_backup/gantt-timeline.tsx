@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback, useEffect, forwardRef, useImperativeHandle } from "react";
+import { useRef, useCallback } from "react";
 import {
   DndContext,
   PointerSensor,
@@ -28,13 +28,22 @@ interface GanttTimelineProps {
   projectId: string;
   onUpdateDates: (taskId: string, startDate: string | null, dueDate: string | null) => void;
   onExtendRange: () => void;
+  ref?: React.Ref<HTMLDivElement>;
 }
 
 /** ガントチャート右側のタイムライン */
-export const GanttTimeline = forwardRef<HTMLDivElement, GanttTimelineProps>(
-  function GanttTimeline({ tasks, rangeStart, visibleDays, projectId, onUpdateDates, onExtendRange }, ref) {
+export function GanttTimeline({ tasks, rangeStart, visibleDays, projectId, onUpdateDates, onExtendRange, ref }: GanttTimelineProps) {
     const innerRef = useRef<HTMLDivElement>(null);
-    useImperativeHandle(ref, () => innerRef.current!);
+
+    /** ref の統合（外部refとinnerRefの両方を設定） */
+    const setRef = useCallback((node: HTMLDivElement | null) => {
+      (innerRef as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      if (typeof ref === "function") {
+        ref(node);
+      } else if (ref && typeof ref === "object") {
+        (ref as React.MutableRefObject<HTMLDivElement | null>).current = node;
+      }
+    }, [ref]);
 
     const days = getDateRange(rangeStart, visibleDays);
     const rangeEnd = new Date(rangeStart);
@@ -173,7 +182,7 @@ export const GanttTimeline = forwardRef<HTMLDivElement, GanttTimelineProps>(
         onDragMove={handleDragMove}
         onDragEnd={handleDragEnd}
       >
-        <div className="min-w-0 flex-1 overflow-x-auto" ref={innerRef}>
+        <div className="min-w-0 flex-1 overflow-x-auto" ref={setRef}>
           <div style={{ width: totalWidth }}>
             {/* 月ヘッダー */}
             <div className="flex h-[30px] border-b bg-muted">
@@ -226,20 +235,17 @@ export const GanttTimeline = forwardRef<HTMLDivElement, GanttTimelineProps>(
                 ))}
 
                 {/* ガントバー */}
-                {task.startDate && task.dueDate && (
-                  <GanttBar
-                    task={task}
-                    weekStart={rangeStart}
-                    weekEnd={rangeEnd}
-                    dayWidth={DAY_WIDTH_PX}
-                    onResize={handleResize}
-                  />
-                )}
+                <GanttBar
+                  task={task}
+                  weekStart={rangeStart}
+                  weekEnd={rangeEnd}
+                  dayWidth={DAY_WIDTH_PX}
+                  onResize={handleResize}
+                />
               </div>
             ))}
           </div>
         </div>
       </DndContext>
     );
-  }
-);
+}

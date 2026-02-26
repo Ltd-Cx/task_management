@@ -207,7 +207,7 @@ export async function updateTaskDates(data: {
       })
       .where(eq(tasks.id, parsed.data.taskId));
 
-    revalidatePath(`/projects/${parsed.data.projectId}/gantt`);
+    // ガントパスは revalidate しない（SVAR が内部状態で更新済み、再フェッチは全体再描画を引き起こす）
     revalidatePath(`/projects/${parsed.data.projectId}/tasks`);
 
     return { success: true };

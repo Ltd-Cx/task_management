@@ -22,9 +22,9 @@ export default async function GanttPage({ params }: Props) {
   }
 
   return (
-    <>
+    <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
       <ProjectHeader projectName={project.name} currentPage="ガントチャート" />
       <GanttView tasks={tasks} projectKey={project.key} projectId={projectId} />
-    </>
+    </div>
   );
 }
