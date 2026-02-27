@@ -5,7 +5,7 @@ import { ProjectHeader } from "@/components/project-header";
 import { PageToolbar } from "@/components/shared/page-toolbar";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { MemberCard } from "@/components/members/member-card";
+import { MemberTable } from "@/components/members/member-table";
 
 type Props = {
   params: Promise<{ projectId: string }>;
@@ -35,11 +35,7 @@ export default async function MembersPage({ params }: Props) {
           </Button>
         </PageToolbar>
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {members.map((member) => (
-            <MemberCard key={member.userId} member={member} />
-          ))}
-        </div>
+        <MemberTable members={members} />
       </div>
     </>
   );

@@ -3,19 +3,18 @@
 import { useDroppable } from "@dnd-kit/core";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { TASK_STATUS_CONFIG } from "@/lib/constants";
 import { BoardCard } from "@/components/board/board-card";
-import type { TaskWithRelations, TaskStatus } from "@/types";
+import type { TaskWithRelations, TaskStatusConfig } from "@/types";
 
 interface BoardColumnProps {
-  status: TaskStatus;
+  status: string;
+  statusConfig: TaskStatusConfig;
   tasks: TaskWithRelations[];
   projectKey: string;
 }
 
 /** ボードカラム（ステータス別列） */
-export function BoardColumn({ status, tasks, projectKey }: BoardColumnProps) {
-  const config = TASK_STATUS_CONFIG[status];
+export function BoardColumn({ status, statusConfig, tasks, projectKey }: BoardColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
   return (
@@ -28,8 +27,11 @@ export function BoardColumn({ status, tasks, projectKey }: BoardColumnProps) {
     >
       {/* カラムヘッダー */}
       <div className="flex items-center gap-2">
-        <span className={cn("size-2.5 rounded-full", config.dotClass)} />
-        <span className="text-sm font-semibold">{config.label}</span>
+        <span
+          className="size-2.5 rounded-full"
+          style={{ backgroundColor: statusConfig.color }}
+        />
+        <span className="text-sm font-semibold">{statusConfig.label}</span>
         <Badge variant="secondary" className="ml-auto text-xs">
           {tasks.length}
         </Badge>

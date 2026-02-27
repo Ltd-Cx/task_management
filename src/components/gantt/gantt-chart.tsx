@@ -9,6 +9,7 @@ interface GanttChartProps {
   tasks: TaskWithRelations[];
   projectKey: string;
   projectId: string;
+  onTaskClick?: (taskId: string) => void;
 }
 
 /** 週末セルのハイライト（モジュールスコープで安定した参照を保持） */
@@ -28,9 +29,12 @@ function highlightTime(date: Date, unit: "day" | "hour"): string {
  * SVAR はドラッグ/リサイズの結果を内部状態で管理するため問題ない。
  */
 const GanttChart = memo(
-  function GanttChart({ tasks, projectKey, projectId }: GanttChartProps) {
+  function GanttChart({ tasks, projectKey, projectId, onTaskClick }: GanttChartProps) {
     const projectIdRef = useRef(projectId);
     projectIdRef.current = projectId;
+
+    const onTaskClickRef = useRef(onTaskClick);
+    onTaskClickRef.current = onTaskClick;
 
     /** 初回マウント時のみタスクデータを変換（SVAR が以降の変更を内部管理） */
     const [ganttTasks] = useState(() =>
@@ -73,9 +77,7 @@ const GanttChart = memo(
     });
 
     const [columns] = useState(() => [
-      { id: "text", header: "課題", flexgrow: 1 },
-      { id: "start", header: "開始日", align: "center" as const, width: 110 },
-      { id: "duration", header: "期間", align: "center" as const, width: 80 },
+      { id: "text", header: "課題", width: 300 },
     ]);
 
     const [scales] = useState(() => [
@@ -103,6 +105,15 @@ const GanttChart = memo(
           id: string | number
         ) => { start?: Date; end?: Date; [key: string]: unknown };
       }) => {
+        // タスク選択イベント（課題番号クリック時）
+        api.on("select-task", (ev) => {
+          const id = ev.id as string | number;
+          if (id && onTaskClickRef.current) {
+            onTaskClickRef.current(String(id));
+          }
+        });
+
+        // タスク更新イベント（ドラッグ/リサイズ時）
         api.on("update-task", (ev) => {
           if (ev.inProgress) return;
 
@@ -128,7 +139,16 @@ const GanttChart = memo(
               startDate,
               dueDate,
             }),
-          });
+          })
+            .then((res) => {
+              if (!res.ok) {
+                throw new Error("Failed to update dates");
+              }
+              return res.json();
+            })
+            .catch((error) => {
+              console.error("日付更新エラー:", error);
+            });
         });
       },
       []

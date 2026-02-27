@@ -1,7 +1,8 @@
 import { eq, desc } from "drizzle-orm";
 import { db } from "@/db";
 import { tasks } from "@/db/schema";
-import type { TasksByStatus, TaskStatus } from "@/types";
+import type { DynamicTasksByStatus } from "@/types";
+import { getProjectStatusesWithDefaults } from "./statuses";
 
 /** 課題一覧（リレーション含む）を取得 */
 export async function getTasksWithRelations(projectId: string) {
@@ -15,23 +16,21 @@ export async function getTasksWithRelations(projectId: string) {
   });
 }
 
-/** ステータス別課題を取得（ボード用） */
+/** ステータス別課題を取得（ボード用） - 動的ステータス対応 */
 export async function getTasksByStatus(
   projectId: string
-): Promise<TasksByStatus> {
-  const allTasks = await getTasksWithRelations(projectId);
-  const statuses: TaskStatus[] = [
-    "open",
-    "in_progress",
-    "resolved",
-    "closed",
-  ];
+): Promise<DynamicTasksByStatus> {
+  const [allTasks, statuses] = await Promise.all([
+    getTasksWithRelations(projectId),
+    getProjectStatusesWithDefaults(projectId),
+  ]);
+
   return Object.fromEntries(
     statuses.map((status) => [
-      status,
-      allTasks.filter((t) => t.status === status),
+      status.key,
+      allTasks.filter((t) => t.status === status.key),
     ])
-  ) as TasksByStatus;
+  );
 }
 
 /** 日付付き課題を取得（ガント用） */
@@ -43,5 +42,16 @@ export async function getTasksWithDates(projectId: string) {
       category: true,
     },
     orderBy: [tasks.startDate],
+  });
+}
+
+/** 単一課題を取得 */
+export async function getTaskById(taskId: string) {
+  return db.query.tasks.findFirst({
+    where: eq(tasks.id, taskId),
+    with: {
+      assignee: true,
+      category: true,
+    },
   });
 }

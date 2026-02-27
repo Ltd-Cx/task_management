@@ -15,7 +15,7 @@ import { TaskPriorityBadge } from "@/components/tasks/task-priority-badge";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { EditTaskDialog } from "@/components/tasks/edit-task-dialog";
 import { formatDate } from "@/lib/date";
-import type { TaskWithRelations, ProjectMemberWithUser, Category } from "@/types";
+import type { TaskWithRelations, ProjectMemberWithUser, Category, TaskStatusConfig } from "@/types";
 
 interface TaskTableProps {
   tasks: TaskWithRelations[];
@@ -23,10 +23,13 @@ interface TaskTableProps {
   projectId: string;
   members: ProjectMemberWithUser[];
   categories: Category[];
+  statuses: TaskStatusConfig[];
 }
 
 /** 課題一覧テーブル */
-export function TaskTable({ tasks, projectKey, projectId, members, categories }: TaskTableProps) {
+export function TaskTable({ tasks, projectKey, projectId, members, categories, statuses }: TaskTableProps) {
+  // ステータスキーからステータス設定を取得するヘルパー
+  const getStatusConfig = (key: string) => statuses.find((s) => s.key === key);
   const [editingTask, setEditingTask] = useState<TaskWithRelations | null>(null);
 
   if (tasks.length === 0) {
@@ -64,7 +67,7 @@ export function TaskTable({ tasks, projectKey, projectId, members, categories }:
               </TableCell>
               <TableCell className="text-[13px]">{task.summary}</TableCell>
               <TableCell>
-                <TaskStatusBadge status={task.status} />
+                <TaskStatusBadge status={task.status} statusConfig={getStatusConfig(task.status)} />
               </TableCell>
               <TableCell>
                 <TaskPriorityBadge priority={task.priority} />
@@ -103,6 +106,7 @@ export function TaskTable({ tasks, projectKey, projectId, members, categories }:
           projectId={projectId}
           members={members}
           categories={categories}
+          statuses={statuses}
           open={!!editingTask}
           onOpenChange={(open) => {
             if (!open) setEditingTask(null);

@@ -1,9 +1,10 @@
 "use client";
 
-import { useTransition } from "react";
+import { useTransition, useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,30 +31,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TASK_STATUS_CONFIG, TASK_PRIORITY_CONFIG } from "@/lib/constants";
+import { TASK_PRIORITY_CONFIG } from "@/lib/constants";
 import { updateTask } from "@/actions/task-actions";
-import type { TaskWithRelations, ProjectMemberWithUser, Category, TaskStatus, TaskPriority } from "@/types";
-
-const editTaskFormSchema = z.object({
-  summary: z.string().min(1, "件名は必須です"),
-  description: z.string().optional(),
-  status: z.enum(["open", "in_progress", "resolved", "closed"]),
-  priority: z.enum(["high", "medium", "low"]),
-  assigneeId: z.string().optional(),
-  categoryId: z.string().optional(),
-  startDate: z.string().optional(),
-  dueDate: z.string().optional(),
-});
-
-type EditTaskFormValues = z.infer<typeof editTaskFormSchema>;
+import type { TaskWithRelations, ProjectMemberWithUser, Category, TaskPriority, TaskStatusConfig } from "@/types";
 
 interface EditTaskDialogProps {
   task: TaskWithRelations;
   projectId: string;
   members: ProjectMemberWithUser[];
   categories: Category[];
+  statuses: TaskStatusConfig[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
 /** 課題編集ダイアログ */
@@ -62,10 +52,29 @@ export function EditTaskDialog({
   projectId,
   members,
   categories,
+  statuses,
   open,
   onOpenChange,
+  onSuccess,
 }: EditTaskDialogProps) {
   const [isPending, startTransition] = useTransition();
+
+  // 動的にZodスキーマを生成
+  const editTaskFormSchema = useMemo(() => {
+    const statusKeys = statuses.map((s) => s.key) as [string, ...string[]];
+    return z.object({
+      summary: z.string().min(1, "件名は必須です"),
+      description: z.string().optional(),
+      status: z.enum(statusKeys),
+      priority: z.enum(["high", "medium", "low"]),
+      assigneeId: z.string().optional(),
+      categoryId: z.string().optional(),
+      startDate: z.string().optional(),
+      dueDate: z.string().optional(),
+    });
+  }, [statuses]);
+
+  type EditTaskFormValues = z.infer<typeof editTaskFormSchema>;
 
   const form = useForm<EditTaskFormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Zod v4 compat層と@hookform/resolversの型不整合を回避
@@ -81,6 +90,20 @@ export function EditTaskDialog({
       dueDate: task.dueDate ?? "",
     },
   });
+
+  // タスクが変更されたらフォームをリセット
+  useEffect(() => {
+    form.reset({
+      summary: task.summary,
+      description: task.description ?? "",
+      status: task.status,
+      priority: task.priority,
+      assigneeId: task.assigneeId ?? "",
+      categoryId: task.categoryId ?? "",
+      startDate: task.startDate ?? "",
+      dueDate: task.dueDate ?? "",
+    });
+  }, [task, form]);
 
   function onSubmit(values: EditTaskFormValues) {
     startTransition(async () => {
@@ -99,6 +122,10 @@ export function EditTaskDialog({
 
       if (result.success) {
         onOpenChange(false);
+        onSuccess?.();
+        toast.success("課題を更新しました");
+      } else {
+        toast.error(result.error ?? "課題の更新に失敗しました");
       }
     });
   }
@@ -158,11 +185,17 @@ export function EditTaskDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {(Object.entries(TASK_STATUS_CONFIG) as [TaskStatus, { label: string }][]).map(
-                          ([value, config]) => (
-                            <SelectItem key={value} value={value}>{config.label}</SelectItem>
-                          )
-                        )}
+                        {statuses.map((statusConfig) => (
+                          <SelectItem key={statusConfig.key} value={statusConfig.key}>
+                            <span className="flex items-center gap-2">
+                              <span
+                                className="size-2 rounded-full"
+                                style={{ backgroundColor: statusConfig.color }}
+                              />
+                              {statusConfig.label}
+                            </span>
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />

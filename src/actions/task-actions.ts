@@ -6,13 +6,15 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { tasks } from "@/db/schema";
 import type { ActionResult } from "@/types";
+import { getProjectStatusesWithDefaults } from "@/db/queries/statuses";
+import { isValidStatusKey } from "@/lib/status-utils";
 
-/** 課題作成のバリデーションスキーマ */
-const createTaskSchema = z.object({
+/** 課題作成のバリデーションスキーマ（ステータス以外） */
+const createTaskBaseSchema = z.object({
   projectId: z.string().uuid("プロジェクトIDは有効なUUID形式で入力してください"),
   summary: z.string().trim().min(1, "件名は必須です").max(255, "件名は255文字以内で入力してください"),
   description: z.string().optional(),
-  status: z.enum(["open", "in_progress", "resolved", "closed"]).optional(),
+  status: z.string().optional(),
   priority: z.enum(["high", "medium", "low"]).optional(),
   assigneeId: z.string().uuid().optional().or(z.literal("")),
   categoryId: z.string().uuid().optional().or(z.literal("")),
@@ -20,10 +22,10 @@ const createTaskSchema = z.object({
   dueDate: z.string().optional(),
 });
 
-/** 課題ステータス更新のバリデーションスキーマ */
-const updateTaskStatusSchema = z.object({
+/** 課題ステータス更新のバリデーションスキーマ（ステータス以外） */
+const updateTaskStatusBaseSchema = z.object({
   taskId: z.string().uuid(),
-  status: z.enum(["open", "in_progress", "resolved", "closed"]),
+  status: z.string(),
   projectId: z.string().uuid(),
 });
 
@@ -43,15 +45,24 @@ export async function createTask(data: {
   createdBy: string;
 }): Promise<ActionResult> {
   try {
-    const parsed = createTaskSchema.safeParse(data);
+    const parsed = createTaskBaseSchema.safeParse(data);
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0]?.message ?? "入力内容に誤りがあります" };
     }
 
-    const { projectId, assigneeId, categoryId, ...taskData } = parsed.data;
+    const { projectId, assigneeId, categoryId, status, ...taskData } = parsed.data;
+
+    // 動的ステータスバリデーション
+    if (status) {
+      const statuses = await getProjectStatusesWithDefaults(projectId);
+      if (!isValidStatusKey(statuses, status)) {
+        return { success: false, error: "無効なステータスです" };
+      }
+    }
 
     await db.insert(tasks).values({
       ...taskData,
+      status: (status as "open" | "in_progress" | "resolved" | "closed") ?? "open",
       projectId,
       assigneeId: assigneeId || null,
       categoryId: categoryId || null,
@@ -77,14 +88,23 @@ export async function updateTaskStatus(data: {
   projectId: string;
 }): Promise<ActionResult> {
   try {
-    const parsed = updateTaskStatusSchema.safeParse(data);
+    const parsed = updateTaskStatusBaseSchema.safeParse(data);
     if (!parsed.success) {
       return { success: false, error: "入力内容に誤りがあります" };
     }
 
+    // 動的ステータスバリデーション
+    const statuses = await getProjectStatusesWithDefaults(parsed.data.projectId);
+    if (!isValidStatusKey(statuses, parsed.data.status)) {
+      return { success: false, error: "無効なステータスです" };
+    }
+
     await db
       .update(tasks)
-      .set({ status: parsed.data.status, updatedAt: new Date() })
+      .set({
+        status: parsed.data.status as "open" | "in_progress" | "resolved" | "closed",
+        updatedAt: new Date(),
+      })
       .where(eq(tasks.id, parsed.data.taskId));
 
     revalidatePath(`/projects/${parsed.data.projectId}/tasks`);
@@ -115,13 +135,13 @@ export async function deleteTask(data: {
   }
 }
 
-/** 課題更新のバリデーションスキーマ */
-const updateTaskSchema = z.object({
+/** 課題更新のバリデーションスキーマ（ステータス以外） */
+const updateTaskBaseSchema = z.object({
   taskId: z.string().uuid(),
   projectId: z.string().uuid(),
   summary: z.string().trim().min(1, "件名は必須です").max(255, "件名は255文字以内で入力してください"),
   description: z.string().optional(),
-  status: z.enum(["open", "in_progress", "resolved", "closed"]).optional(),
+  status: z.string().optional(),
   priority: z.enum(["high", "medium", "low"]).optional(),
   assigneeId: z.string().uuid().optional().or(z.literal("")),
   categoryId: z.string().uuid().optional().or(z.literal("")),
@@ -145,17 +165,26 @@ export async function updateTask(data: {
   dueDate?: string;
 }): Promise<ActionResult> {
   try {
-    const parsed = updateTaskSchema.safeParse(data);
+    const parsed = updateTaskBaseSchema.safeParse(data);
     if (!parsed.success) {
       return { success: false, error: parsed.error.issues[0]?.message ?? "入力内容に誤りがあります" };
     }
 
-    const { taskId, projectId, assigneeId, categoryId, ...taskData } = parsed.data;
+    const { taskId, projectId, assigneeId, categoryId, status, ...taskData } = parsed.data;
+
+    // 動的ステータスバリデーション
+    if (status) {
+      const statuses = await getProjectStatusesWithDefaults(projectId);
+      if (!isValidStatusKey(statuses, status)) {
+        return { success: false, error: "無効なステータスです" };
+      }
+    }
 
     await db
       .update(tasks)
       .set({
         ...taskData,
+        status: status as "open" | "in_progress" | "resolved" | "closed" | undefined,
         assigneeId: assigneeId || null,
         categoryId: categoryId || null,
         startDate: taskData.startDate || null,

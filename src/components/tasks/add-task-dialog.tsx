@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Plus } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -32,27 +33,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TASK_STATUS_CONFIG, TASK_PRIORITY_CONFIG } from "@/lib/constants";
+import { TASK_PRIORITY_CONFIG } from "@/lib/constants";
 import { createTask } from "@/actions/task-actions";
-import type { ProjectMemberWithUser, Category, TaskStatus, TaskPriority } from "@/types";
-
-const addTaskFormSchema = z.object({
-  summary: z.string().min(1, "件名は必須です"),
-  description: z.string().optional(),
-  status: z.enum(["open", "in_progress", "resolved", "closed"]).default("open"),
-  priority: z.enum(["high", "medium", "low"]).default("medium"),
-  assigneeId: z.string().optional(),
-  categoryId: z.string().optional(),
-  startDate: z.string().optional(),
-  dueDate: z.string().optional(),
-});
-
-type AddTaskFormValues = z.infer<typeof addTaskFormSchema>;
+import type { ProjectMemberWithUser, Category, TaskPriority, TaskStatusConfig } from "@/types";
 
 interface AddTaskDialogProps {
   projectId: string;
   members: ProjectMemberWithUser[];
   categories: Category[];
+  statuses: TaskStatusConfig[];
 }
 
 /** 課題追加ダイアログ */
@@ -60,9 +49,29 @@ export function AddTaskDialog({
   projectId,
   members,
   categories,
+  statuses,
 }: AddTaskDialogProps) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
+
+  // 動的にZodスキーマを生成
+  const addTaskFormSchema = useMemo(() => {
+    const statusKeys = statuses.map((s) => s.key) as [string, ...string[]];
+    return z.object({
+      summary: z.string().min(1, "件名は必須です"),
+      description: z.string().optional(),
+      status: z.enum(statusKeys).default(statusKeys[0] ?? "open"),
+      priority: z.enum(["high", "medium", "low"]).default("medium"),
+      assigneeId: z.string().optional(),
+      categoryId: z.string().optional(),
+      startDate: z.string().optional(),
+      dueDate: z.string().optional(),
+    });
+  }, [statuses]);
+
+  type AddTaskFormValues = z.infer<typeof addTaskFormSchema>;
+
+  const defaultStatus = statuses[0]?.key ?? "open";
 
   const form = useForm<AddTaskFormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Zod v4 compat層と@hookform/resolversの型不整合を回避
@@ -70,7 +79,7 @@ export function AddTaskDialog({
     defaultValues: {
       summary: "",
       description: "",
-      status: "open",
+      status: defaultStatus,
       priority: "medium",
       assigneeId: "",
       categoryId: "",
@@ -100,6 +109,9 @@ export function AddTaskDialog({
       if (result.success) {
         form.reset();
         setOpen(false);
+        toast.success("課題を追加しました");
+      } else {
+        toast.error(result.error ?? "課題の追加に失敗しました");
       }
     });
   }
@@ -166,11 +178,17 @@ export function AddTaskDialog({
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {(Object.entries(TASK_STATUS_CONFIG) as [TaskStatus, { label: string }][]).map(
-                          ([value, config]) => (
-                            <SelectItem key={value} value={value}>{config.label}</SelectItem>
-                          )
-                        )}
+                        {statuses.map((statusConfig) => (
+                          <SelectItem key={statusConfig.key} value={statusConfig.key}>
+                            <span className="flex items-center gap-2">
+                              <span
+                                className="size-2 rounded-full"
+                                style={{ backgroundColor: statusConfig.color }}
+                              />
+                              {statusConfig.label}
+                            </span>
+                          </SelectItem>
+                        ))}
                       </SelectContent>
                     </Select>
                     <FormMessage />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -14,20 +14,22 @@ import {
 import { BoardColumn } from "@/components/board/board-column";
 import { BoardCard } from "@/components/board/board-card";
 import { updateTaskStatus } from "@/actions/task-actions";
-import type { TasksByStatus, TaskStatus, TaskWithRelations } from "@/types";
-
-const STATUS_ORDER: TaskStatus[] = ["open", "in_progress", "resolved", "closed"];
+import type { DynamicTasksByStatus, TaskWithRelations, TaskStatusConfig } from "@/types";
 
 interface BoardViewProps {
-  tasksByStatus: TasksByStatus;
+  tasksByStatus: DynamicTasksByStatus;
+  statuses: TaskStatusConfig[];
   projectKey: string;
   projectId: string;
 }
 
 /** ボードビュー（カンバン全体） */
-export function BoardView({ tasksByStatus, projectKey, projectId }: BoardViewProps) {
-  const [localTasks, setLocalTasks] = useState<TasksByStatus>(tasksByStatus);
+export function BoardView({ tasksByStatus, statuses, projectKey, projectId }: BoardViewProps) {
+  const [localTasks, setLocalTasks] = useState<DynamicTasksByStatus>(tasksByStatus);
   const [activeTask, setActiveTask] = useState<TaskWithRelations | null>(null);
+
+  // ステータスキーの配列を生成
+  const statusKeys = useMemo(() => statuses.map((s) => s.key), [statuses]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -38,24 +40,24 @@ export function BoardView({ tasksByStatus, projectKey, projectId }: BoardViewPro
   /** ドラッグ中のタスクを特定 */
   const findTask = useCallback(
     (taskId: string): TaskWithRelations | undefined => {
-      for (const status of STATUS_ORDER) {
-        const found = localTasks[status].find((t) => t.id === taskId);
+      for (const status of statusKeys) {
+        const found = localTasks[status]?.find((t) => t.id === taskId);
         if (found) return found;
       }
       return undefined;
     },
-    [localTasks]
+    [localTasks, statusKeys]
   );
 
   /** ドラッグ中のタスクの現在のステータスを特定 */
   const findTaskStatus = useCallback(
-    (taskId: string): TaskStatus | undefined => {
-      for (const status of STATUS_ORDER) {
-        if (localTasks[status].some((t) => t.id === taskId)) return status;
+    (taskId: string): string | undefined => {
+      for (const status of statusKeys) {
+        if (localTasks[status]?.some((t) => t.id === taskId)) return status;
       }
       return undefined;
     },
-    [localTasks]
+    [localTasks, statusKeys]
   );
 
   function handleDragStart(event: DragStartEvent) {
@@ -74,9 +76,9 @@ export function BoardView({ tasksByStatus, projectKey, projectId }: BoardViewPro
 
     // ドロップ先のステータスを判定（カラムIDまたはカードのステータス）
     const overIdStr = String(over.id);
-    let newStatus: TaskStatus;
-    if (STATUS_ORDER.includes(overIdStr as TaskStatus)) {
-      newStatus = overIdStr as TaskStatus;
+    let newStatus: string;
+    if (statusKeys.includes(overIdStr)) {
+      newStatus = overIdStr;
     } else {
       // カード上にドロップした場合、そのカードのステータスを使う
       const overTaskStatus = findTaskStatus(overIdStr);
@@ -92,8 +94,8 @@ export function BoardView({ tasksByStatus, projectKey, projectId }: BoardViewPro
     // Optimistic UI: ローカルstate更新
     setLocalTasks((prev) => {
       const updated = { ...prev };
-      updated[currentStatus] = prev[currentStatus].filter((t) => t.id !== taskId);
-      updated[newStatus] = [...prev[newStatus], { ...task, status: newStatus }];
+      updated[currentStatus] = (prev[currentStatus] ?? []).filter((t) => t.id !== taskId);
+      updated[newStatus] = [...(prev[newStatus] ?? []), { ...task, status: newStatus as typeof task.status }];
       return updated;
     });
 
@@ -109,11 +111,12 @@ export function BoardView({ tasksByStatus, projectKey, projectId }: BoardViewPro
       onDragEnd={handleDragEnd}
     >
       <div className="flex min-h-0 flex-1 gap-4 overflow-x-auto pb-4">
-        {STATUS_ORDER.map((status) => (
+        {statuses.map((statusConfig) => (
           <BoardColumn
-            key={status}
-            status={status}
-            tasks={localTasks[status]}
+            key={statusConfig.key}
+            status={statusConfig.key}
+            statusConfig={statusConfig}
+            tasks={localTasks[statusConfig.key] ?? []}
             projectKey={projectKey}
           />
         ))}

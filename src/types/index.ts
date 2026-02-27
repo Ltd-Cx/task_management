@@ -33,6 +33,9 @@ export type ProjectMemberWithUser = ProjectMember & {
 // --- ステータス別グループ（ボード用） ---
 export type TasksByStatus = Record<TaskStatus, TaskWithRelations[]>;
 
+// --- 動的ステータス対応のボード用型 ---
+export type DynamicTasksByStatus = Record<string, TaskWithRelations[]>;
+
 // --- カスタムステータス設定 ---
 export type TaskStatusConfig = InferSelectModel<typeof taskStatuses>;
 

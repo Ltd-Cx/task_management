@@ -23,10 +23,9 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { UserAvatar } from "@/components/shared/user-avatar";
 import { Input } from "@/components/ui/input";
-import type { Project } from "@/types";
-
+import type { Project, User } from "@/types";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 /** アイコンマッピング */
 const iconMap = {
   LayoutDashboard,
@@ -49,12 +48,17 @@ const NAV_ITEMS = [
 
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   project: Project;
+  currentUser?: User;
 }
 
 /** プロジェクト用サイドバー */
-export function AppSidebar({ project, ...props }: AppSidebarProps) {
+export function AppSidebar({ project, currentUser, ...props }: AppSidebarProps) {
   const pathname = usePathname();
   const basePath = `/projects/${project.id}`;
+
+  const displayName = currentUser?.displayName ?? "ゲスト";
+  const email = currentUser?.email ?? "";
+  const avatarUrl = currentUser?.avatarUrl ?? undefined;
 
   return (
     <Sidebar variant="inset" {...props}>
@@ -64,11 +68,16 @@ export function AppSidebar({ project, ...props }: AppSidebarProps) {
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
               <Link href={basePath}>
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-                  <FolderKanban className="size-4" />
-                </div>
+                <Avatar>
+                  <AvatarImage src="/goff.jpg" alt={project.name} />
+                  <AvatarFallback className="bg-primary text-primary-foreground">
+                    {project.key.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Backlog Clone</span>
+                  <span className="truncate font-semibold">
+                    Simple Todo App
+                  </span>
                   <span className="truncate text-xs text-muted-foreground">
                     プロジェクト管理
                   </span>
@@ -77,28 +86,6 @@ export function AppSidebar({ project, ...props }: AppSidebarProps) {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-
-        {/* プロジェクト名 */}
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="sm" className="font-medium">
-              <FolderKanban className="size-4" />
-              {project.name}
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-
-        {/* 検索 */}
-        <div className="px-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-            <Input
-              placeholder="検索..."
-              className="h-9 pl-8 text-sm"
-              readOnly
-            />
-          </div>
-        </div>
       </SidebarHeader>
 
       <SidebarContent>
@@ -133,14 +120,16 @@ export function AppSidebar({ project, ...props }: AppSidebarProps) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg">
-              <UserAvatar
-                user={{ displayName: "管理ユーザー" }}
-                size="sm"
-              />
+              <Avatar className="size-8">
+                <AvatarImage src={avatarUrl} alt={displayName} />
+                <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                  {displayName.slice(0, 2)}
+                </AvatarFallback>
+              </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">管理ユーザー</span>
+                <span className="truncate font-medium">{displayName}</span>
                 <span className="truncate text-xs text-muted-foreground">
-                  admin@example.com
+                  {email}
                 </span>
               </div>
             </SidebarMenuButton>

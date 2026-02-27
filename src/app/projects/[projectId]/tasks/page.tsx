@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { getProject, getCategories } from "@/db/queries/projects";
 import { getTasksWithRelations } from "@/db/queries/tasks";
 import { getProjectMembersWithUsers } from "@/db/queries/members";
+import { getProjectStatusesWithDefaults } from "@/db/queries/statuses";
 import { ProjectHeader } from "@/components/project-header";
 import { TaskListToolbar } from "@/components/tasks/task-list-toolbar";
 import { TaskTable } from "@/components/tasks/task-table";
@@ -14,11 +15,12 @@ type Props = {
 export default async function TasksPage({ params }: Props) {
   const { projectId } = await params;
 
-  const [project, tasks, members, categories] = await Promise.all([
+  const [project, tasks, members, categories, statuses] = await Promise.all([
     getProject(projectId),
     getTasksWithRelations(projectId),
     getProjectMembersWithUsers(projectId),
     getCategories(projectId),
+    getProjectStatusesWithDefaults(projectId),
   ]);
 
   if (!project) {
@@ -33,6 +35,7 @@ export default async function TasksPage({ params }: Props) {
           projectId={projectId}
           members={members}
           categories={categories}
+          statuses={statuses}
         />
         <TaskTable
           tasks={tasks}
@@ -40,6 +43,7 @@ export default async function TasksPage({ params }: Props) {
           projectId={projectId}
           members={members}
           categories={categories}
+          statuses={statuses}
         />
       </div>
     </>
