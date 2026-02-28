@@ -1,5 +1,3 @@
-import DOMPurify from "isomorphic-dompurify";
-
 /** 許可するHTMLタグ */
 const ALLOWED_TAGS = [
   // テキストフォーマット
@@ -19,20 +17,33 @@ const ALLOWED_TAGS = [
 /** 許可する属性 */
 const ALLOWED_ATTR = ["href", "target", "rel", "src", "alt", "class", "width", "height"];
 
+/** 禁止する属性パターン */
+const FORBIDDEN_ATTR_PATTERN = /\s(on\w+|style)\s*=/gi;
+
+/** 禁止するタグパターン */
+const FORBIDDEN_TAG_PATTERN = /<\s*(script|style|iframe|form|input)[^>]*>[\s\S]*?<\s*\/\s*\1\s*>|<\s*(script|style|iframe|form|input)[^>]*\/?>/gi;
+
 /**
  * HTMLをサニタイズして安全な文字列を返す
+ * サーバーサイドでも動作する軽量実装
  */
 export function sanitizeHtml(html: string | undefined | null): string {
   if (!html) return "";
 
-  return DOMPurify.sanitize(html, {
-    ALLOWED_TAGS,
-    ALLOWED_ATTR,
-    // target="_blank" のリンクに rel="noopener noreferrer" を自動追加
-    ADD_ATTR: ["target"],
-    FORBID_TAGS: ["script", "style", "iframe", "form", "input"],
-    FORBID_ATTR: ["onclick", "onerror", "onload", "style"],
-  });
+  let sanitized = html;
+
+  // 危険なタグを除去
+  sanitized = sanitized.replace(FORBIDDEN_TAG_PATTERN, "");
+
+  // 危険な属性を除去
+  sanitized = sanitized.replace(FORBIDDEN_ATTR_PATTERN, " ");
+
+  // 許可されていないタグを除去（内容は保持）
+  const allowedTagsPattern = ALLOWED_TAGS.join("|");
+  const tagPattern = new RegExp(`<\\/?(?!(${allowedTagsPattern})\\b)[a-z][^>]*>`, "gi");
+  sanitized = sanitized.replace(tagPattern, "");
+
+  return sanitized;
 }
 
 /**
