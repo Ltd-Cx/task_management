@@ -166,3 +166,5 @@ NODE_ENV = "production"
 ## ライセンス
 
 Private
+
+psql -h 5.104.82.232 -p 5432 -U postgres -d postgres < supabase_dump.sql
