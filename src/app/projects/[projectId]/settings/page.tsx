@@ -34,7 +34,7 @@ export default async function SettingsPage({ params }: Props) {
         <ProjectSettingsForm project={project} />
         {currentUser && <AvatarSettings user={currentUser} />}
         <StatusManagement projectId={project.id} statuses={statuses} />
-        <DangerZone projectId={project.id} projectName={project.name} />
+        {/* <DangerZone projectId={project.id} projectName={project.name} /> */}
       </div>
     </>
   );

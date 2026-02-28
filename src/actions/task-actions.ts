@@ -8,6 +8,7 @@ import { tasks } from "@/db/schema";
 import type { ActionResult } from "@/types";
 import { getProjectStatusesWithDefaults } from "@/db/queries/statuses";
 import { isValidStatusKey } from "@/lib/status-utils";
+import { sanitizeHtml, isHtmlEmpty } from "@/lib/sanitize";
 
 /** 課題作成のバリデーションスキーマ（ステータス以外） */
 const createTaskBaseSchema = z.object({
@@ -50,7 +51,7 @@ export async function createTask(data: {
       return { success: false, error: parsed.error.issues[0]?.message ?? "入力内容に誤りがあります" };
     }
 
-    const { projectId, assigneeId, categoryId, status, ...taskData } = parsed.data;
+    const { projectId, assigneeId, categoryId, status, description, ...taskData } = parsed.data;
 
     // 動的ステータスバリデーション
     if (status) {
@@ -60,8 +61,12 @@ export async function createTask(data: {
       }
     }
 
+    // HTML サニタイズ
+    const sanitizedDescription = isHtmlEmpty(description) ? null : sanitizeHtml(description);
+
     await db.insert(tasks).values({
       ...taskData,
+      description: sanitizedDescription,
       status: (status as "open" | "in_progress" | "resolved" | "closed") ?? "open",
       projectId,
       assigneeId: assigneeId || null,
@@ -170,7 +175,7 @@ export async function updateTask(data: {
       return { success: false, error: parsed.error.issues[0]?.message ?? "入力内容に誤りがあります" };
     }
 
-    const { taskId, projectId, assigneeId, categoryId, status, ...taskData } = parsed.data;
+    const { taskId, projectId, assigneeId, categoryId, status, description, ...taskData } = parsed.data;
 
     // 動的ステータスバリデーション
     if (status) {
@@ -180,10 +185,14 @@ export async function updateTask(data: {
       }
     }
 
+    // HTML サニタイズ
+    const sanitizedDescription = isHtmlEmpty(description) ? null : sanitizeHtml(description);
+
     await db
       .update(tasks)
       .set({
         ...taskData,
+        description: sanitizedDescription,
         status: status as "open" | "in_progress" | "resolved" | "closed" | undefined,
         assigneeId: assigneeId || null,
         categoryId: categoryId || null,

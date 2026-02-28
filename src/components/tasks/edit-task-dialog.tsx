@@ -23,7 +23,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import { TipTapEditor } from "@/components/ui/tiptap-editor";
 import {
   Select,
   SelectContent,
@@ -132,14 +132,15 @@ export function EditTaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[560px]">
+      <DialogContent className="flex max-h-[90vh] flex-col sm:max-w-[560px]">
         <DialogHeader>
           <DialogTitle>課題の編集</DialogTitle>
           <p className="text-sm text-muted-foreground">課題の内容を編集します。</p>
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-1 flex-col overflow-hidden">
+            <div className="flex-1 space-y-8 overflow-y-auto px-1 no-scrollbar">
             {/* 件名 */}
             <FormField
               control={form.control}
@@ -163,7 +164,11 @@ export function EditTaskDialog({
                 <FormItem>
                   <FormLabel>詳細</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="課題の詳細を入力（任意）" className="min-h-[80px]" {...field} />
+                    <TipTapEditor
+                      value={field.value ?? ""}
+                      onChange={field.onChange}
+                      placeholder="課題の詳細を入力（任意）"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -281,7 +286,7 @@ export function EditTaskDialog({
             </div>
 
             {/* 開始日 + 期限日 */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4 pb-4">
               <FormField
                 control={form.control}
                 name="startDate"
@@ -309,8 +314,9 @@ export function EditTaskDialog({
                 )}
               />
             </div>
+            </div>
 
-            <DialogFooter>
+            <DialogFooter className="pt-8 pb-4">
               <DialogClose asChild>
                 <Button type="button" variant="outline">キャンセル</Button>
               </DialogClose>

@@ -69,7 +69,7 @@ export function AppSidebar({ project, currentUser, ...props }: AppSidebarProps) 
             <SidebarMenuButton size="lg" asChild>
               <Link href={basePath}>
                 <Avatar>
-                  <AvatarImage src="/goff.jpg" alt={project.name} />
+                  <AvatarImage src={avatarUrl} alt={project.name} />
                   <AvatarFallback className="bg-primary text-primary-foreground">
                     {project.key.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
@@ -116,7 +116,7 @@ export function AppSidebar({ project, currentUser, ...props }: AppSidebarProps) 
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>
+      {/* <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg">
@@ -135,7 +135,7 @@ export function AppSidebar({ project, currentUser, ...props }: AppSidebarProps) 
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-      </SidebarFooter>
+      </SidebarFooter> */}
     </Sidebar>
   );
 }

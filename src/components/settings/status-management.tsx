@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect, useId } from "react";
 import { Plus, GripVertical, Trash2, Pencil } from "lucide-react";
 import {
   DndContext,
@@ -130,6 +130,13 @@ export function StatusManagement({ projectId, statuses }: StatusManagementProps)
   const [addOpen, setAddOpen] = useState(false);
   const [editingStatus, setEditingStatus] = useState<TaskStatusConfig | null>(null);
   const [localStatuses, setLocalStatuses] = useState<TaskStatusConfig[]>(statuses);
+  const [isMounted, setIsMounted] = useState(false);
+  const dndContextId = useId();
+
+  // クライアントサイドでのみDnDをレンダリング（ハイドレーションエラー回避）
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // 追加フォーム
   const [newKey, setNewKey] = useState("");
@@ -243,8 +250,27 @@ export function StatusManagement({ projectId, statuses }: StatusManagementProps)
           <p className="py-4 text-center text-sm text-muted-foreground">
             ステータスはまだ追加されていません
           </p>
+        ) : !isMounted ? (
+          // SSR時は静的なリストを表示
+          <div className="space-y-2">
+            {localStatuses.map((status) => (
+              <div
+                key={status.id}
+                className="flex items-center gap-3 rounded-lg border bg-card px-3 py-2"
+              >
+                <GripVertical className="size-4 text-muted-foreground" />
+                <span
+                  className="size-3 rounded-full"
+                  style={{ backgroundColor: status.color }}
+                />
+                <span className="flex-1 text-sm font-medium">{status.label}</span>
+                <span className="text-xs text-muted-foreground">{status.key}</span>
+              </div>
+            ))}
+          </div>
         ) : (
           <DndContext
+            id={dndContextId}
             sensors={sensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}

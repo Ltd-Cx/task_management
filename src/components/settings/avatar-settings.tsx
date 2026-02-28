@@ -1,13 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useRef } from "react";
+import { Upload, X } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { updateUserAvatar } from "@/actions/user-actions";
+import { uploadAvatar, deleteAvatar } from "@/lib/supabase";
 import type { User } from "@/types";
 
 interface AvatarSettingsProps {
@@ -17,35 +18,81 @@ interface AvatarSettingsProps {
 /** アバター設定セクション */
 export function AvatarSettings({ user }: AvatarSettingsProps) {
   const [isPending, startTransition] = useTransition();
-  const [avatarUrl, setAvatarUrl] = useState(user.avatarUrl ?? "");
+  const [isUploading, setIsUploading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState(user.avatarUrl ?? "");
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  function handlePreview() {
-    setPreviewUrl(avatarUrl);
+  function handleFileSelect() {
+    fileInputRef.current?.click();
   }
 
-  function handleSave() {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+
+    try {
+      // Supabase Storageにアップロード
+      const result = await uploadAvatar(user.id, file);
+
+      if ("error" in result) {
+        toast.error(result.error);
+        return;
+      }
+
+      // プレビューを更新
+      setPreviewUrl(result.url);
+
+      // DBに保存
+      startTransition(async () => {
+        const saveResult = await updateUserAvatar({
+          userId: user.id,
+          avatarUrl: result.url,
+        });
+
+        if (saveResult.success) {
+          toast.success("アバターを更新しました");
+        } else {
+          toast.error(saveResult.error ?? "アバターの保存に失敗しました");
+        }
+      });
+    } catch {
+      toast.error("アップロード中にエラーが発生しました");
+    } finally {
+      setIsUploading(false);
+      // ファイル入力をリセット
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  }
+
+  function handleClear() {
     startTransition(async () => {
+      // Storageから削除
+      const deleteResult = await deleteAvatar(user.id);
+      if (!deleteResult.success) {
+        toast.error(deleteResult.error ?? "削除に失敗しました");
+        return;
+      }
+
+      // DBから削除
       const result = await updateUserAvatar({
         userId: user.id,
-        avatarUrl,
+        avatarUrl: "",
       });
+
       if (result.success) {
-        setPreviewUrl(avatarUrl);
+        setPreviewUrl("");
+        toast.success("アバターを削除しました");
+      } else {
+        toast.error(result.error ?? "アバターの削除に失敗しました");
       }
     });
   }
 
-  function handleClear() {
-    setAvatarUrl("");
-    setPreviewUrl("");
-    startTransition(async () => {
-      await updateUserAvatar({
-        userId: user.id,
-        avatarUrl: "",
-      });
-    });
-  }
+  const isProcessing = isPending || isUploading;
 
   return (
     <Card className="shadow-sm">
@@ -67,48 +114,48 @@ export function AvatarSettings({ user }: AvatarSettingsProps) {
                 {user.displayName.slice(0, 2)}
               </AvatarFallback>
             </Avatar>
-            <span className="text-xs text-muted-foreground">プレビュー</span>
           </div>
 
-          {/* 入力フォーム */}
+          {/* アップロードフォーム */}
           <div className="flex-1 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="avatarUrl">画像URL</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="avatarUrl"
-                  type="url"
-                  placeholder="https://example.com/avatar.jpg"
-                  value={avatarUrl}
-                  onChange={(e) => setAvatarUrl(e.target.value)}
-                />
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/gif,image/webp"
+                onChange={handleFileChange}
+                className="hidden"
+              />
+
+              <div className="flex flex-col gap-2">
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={handlePreview}
-                  disabled={!avatarUrl}
+                  onClick={handleFileSelect}
+                  disabled={isProcessing}
+                  className="w-fit"
                 >
-                  プレビュー
+                  <Upload className="size-4" />
+                  {isUploading ? "アップロード中..." : "画像を選択"}
                 </Button>
+                <p className="text-xs text-muted-foreground">
+                  JPG, PNG, GIF, WEBP形式（最大5MB）
+                </p>
               </div>
-              <p className="text-xs text-muted-foreground">
-                外部の画像URLを入力してください（例: Gravatar, GitHub Avatar など）
-              </p>
             </div>
 
-            <div className="flex gap-2">
-              <Button onClick={handleSave} disabled={isPending}>
-                {isPending ? "保存中..." : "保存する"}
-              </Button>
+            {previewUrl && (
               <Button
                 type="button"
                 variant="outline"
                 onClick={handleClear}
-                disabled={isPending || !user.avatarUrl}
+                disabled={isProcessing}
+                className="text-destructive hover:text-destructive"
               >
-                削除
+                <X className="size-4" />
+                アバターを削除
               </Button>
-            </div>
+            )}
           </div>
         </div>
       </CardContent>
