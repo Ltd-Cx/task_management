@@ -31,13 +31,10 @@ export async function uploadAvatar(
     return { error: "ファイルサイズは5MB以下にしてください" };
   }
 
-  // ファイル名を生成（ユーザーIDベース）
-  const fileName = `${userId}/avatar.${ext}`;
+  // ファイル名を生成（ユーザーIDベース、フラットな構造）
+  const fileName = `avatars/${userId}.${ext}`;
 
-  // 既存ファイルを削除（存在する場合）
-  await supabase.storage.from(AVATAR_BUCKET).remove([fileName]);
-
-  // アップロード
+  // アップロード（upsertで既存ファイルを上書き）
   const { error: uploadError } = await supabase.storage
     .from(AVATAR_BUCKET)
     .upload(fileName, file, {
@@ -47,7 +44,7 @@ export async function uploadAvatar(
 
   if (uploadError) {
     console.error("Upload error:", uploadError);
-    return { error: "アップロードに失敗しました" };
+    return { error: `アップロードに失敗しました: ${uploadError.message}` };
   }
 
   // 公開URLを取得
@@ -62,10 +59,12 @@ export async function uploadAvatar(
  * アバター画像を削除
  */
 export async function deleteAvatar(userId: string): Promise<{ success: boolean; error?: string }> {
-  // ユーザーフォルダ内のファイルをリスト
+  // avatarsフォルダ内のユーザーファイルを検索
   const { data: files, error: listError } = await supabase.storage
     .from(AVATAR_BUCKET)
-    .list(userId);
+    .list("avatars", {
+      search: userId,
+    });
 
   if (listError) {
     console.error("List error:", listError);
@@ -76,8 +75,15 @@ export async function deleteAvatar(userId: string): Promise<{ success: boolean; 
     return { success: true };
   }
 
-  // ファイルを削除
-  const filePaths = files.map((f) => `${userId}/${f.name}`);
+  // マッチするファイルを削除
+  const filePaths = files
+    .filter((f) => f.name.startsWith(userId))
+    .map((f) => `avatars/${f.name}`);
+
+  if (filePaths.length === 0) {
+    return { success: true };
+  }
+
   const { error: removeError } = await supabase.storage
     .from(AVATAR_BUCKET)
     .remove(filePaths);

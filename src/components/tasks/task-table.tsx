@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -12,6 +12,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { TaskStatusBadge } from "@/components/tasks/task-status-badge";
 import { TaskPriorityBadge } from "@/components/tasks/task-priority-badge";
+import { TaskListFilters, type TaskFilters } from "@/components/tasks/task-list-filters";
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { EditTaskDialog } from "@/components/tasks/edit-task-dialog";
 import { formatDate } from "@/lib/date";
@@ -31,17 +32,71 @@ export function TaskTable({ tasks, projectKey, projectId, members, categories, s
   // ステータスキーからステータス設定を取得するヘルパー
   const getStatusConfig = (key: string) => statuses.find((s) => s.key === key);
   const [editingTask, setEditingTask] = useState<TaskWithRelations | null>(null);
+  const [filters, setFilters] = useState<TaskFilters>({
+    status: null,
+    priority: null,
+    assigneeId: null,
+    categoryId: null,
+  });
 
-  if (tasks.length === 0) {
-    return (
-      <div className="flex h-40 items-center justify-center text-muted-foreground">
-        課題がありません
-      </div>
-    );
-  }
+  // フィルター適用
+  const filteredTasks = useMemo(() => {
+    return tasks.filter((task) => {
+      // 状態フィルター
+      if (filters.status && task.status !== filters.status) {
+        return false;
+      }
+      // 優先度フィルター
+      if (filters.priority && task.priority !== filters.priority) {
+        return false;
+      }
+      // 担当者フィルター
+      if (filters.assigneeId) {
+        if (filters.assigneeId === "unassigned") {
+          if (task.assigneeId) return false;
+        } else if (task.assigneeId !== filters.assigneeId) {
+          return false;
+        }
+      }
+      // カテゴリーフィルター
+      if (filters.categoryId) {
+        if (filters.categoryId === "none") {
+          if (task.categoryId) return false;
+        } else if (task.categoryId !== filters.categoryId) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [tasks, filters]);
+
+  const hasActiveFilters =
+    filters.status || filters.priority || filters.assigneeId || filters.categoryId;
 
   return (
-    <>
+    <div className="space-y-4">
+      {/* フィルター */}
+      <TaskListFilters
+        statuses={statuses}
+        members={members}
+        categories={categories}
+        filters={filters}
+        onFiltersChange={setFilters}
+      />
+
+      {/* 結果件数 */}
+      {hasActiveFilters && (
+        <p className="text-sm text-muted-foreground">
+          {filteredTasks.length}件の課題が見つかりました
+        </p>
+      )}
+
+      {/* テーブル */}
+      {filteredTasks.length === 0 ? (
+        <div className="flex h-40 items-center justify-center text-muted-foreground rounded-lg border bg-card">
+          {tasks.length === 0 ? "課題がありません" : "条件に一致する課題がありません"}
+        </div>
+      ) : (
       <div className="overflow-hidden rounded-lg border bg-card">
       <Table>
         <TableHeader>
@@ -56,7 +111,7 @@ export function TaskTable({ tasks, projectKey, projectId, members, categories, s
           </TableRow>
         </TableHeader>
         <TableBody>
-          {tasks.map((task) => (
+          {filteredTasks.map((task) => (
             <TableRow
               key={task.id}
               className="cursor-pointer"
@@ -99,6 +154,7 @@ export function TaskTable({ tasks, projectKey, projectId, members, categories, s
         </TableBody>
       </Table>
       </div>
+      )}
 
       {editingTask && (
         <EditTaskDialog
@@ -113,6 +169,6 @@ export function TaskTable({ tasks, projectKey, projectId, members, categories, s
           }}
         />
       )}
-    </>
+    </div>
   );
 }
