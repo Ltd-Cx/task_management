@@ -43,10 +43,12 @@
     "nextjs-toploader": "^3.9.17",
     "postgres": "^3.4.8",
     "radix-ui": "^1.4.3",
+    "rc-gantt": "^0.3.3",
     "react": "19.2.3",
     "react-day-picker": "^9.13.2",
     "react-dom": "19.2.3",
     "react-hook-form": "^7.71.2",
+    "react-modern-gantt": "^0.8.3",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
     "zod": "^4.3.6"

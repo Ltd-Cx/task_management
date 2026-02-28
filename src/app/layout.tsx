@@ -15,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Backlog Clone",
-  description: "プロジェクト管理ツール",
+  title: "Simple Task Management",
+  description: "シンプルなタスク管理ツール",
 };
 
 export default function RootLayout({

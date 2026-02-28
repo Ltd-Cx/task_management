@@ -4,8 +4,7 @@ import { getProjectMembersWithUsers } from "@/db/queries/members";
 import { getTasksWithDates } from "@/db/queries/tasks";
 import { getProjectStatusesWithDefaults } from "@/db/queries/statuses";
 import { ProjectHeader } from "@/components/project-header";
-import { GanttTestWrapper } from "./gantt-test-wrapper";
-import { PageToolbar } from "@/components/shared/page-toolbar";
+import { GanttView } from "@/components/gantt/gantt-view";
 
 type Props = {
   params: Promise<{ projectId: string }>;
@@ -30,19 +29,14 @@ export default async function GanttPage({ params }: Props) {
   return (
     <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
       <ProjectHeader projectName={project.name} currentPage="ガントチャート" />
-      <div className="flex-1 overflow-hidden gap-6 p-6">
-        <PageToolbar title="ガントチャート" />
-        <div className="h-full rounded-lg border bg-card mt-8">
-          <GanttTestWrapper
-            tasks={tasks}
-            projectKey={project.key}
-            projectId={projectId}
-            members={members}
-            categories={categories}
-            statuses={statuses}
-          />
-        </div>
-      </div>
+      <GanttView
+        tasks={tasks}
+        projectKey={project.key}
+        projectId={projectId}
+        members={members}
+        categories={categories}
+        statuses={statuses}
+      />
     </div>
   );
 }

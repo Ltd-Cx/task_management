@@ -6,12 +6,12 @@ import dynamic from "next/dynamic";
 import type { TaskWithRelations, ProjectMemberWithUser, Category, TaskStatusConfig } from "@/types";
 import { EditTaskDialog } from "@/components/tasks/edit-task-dialog";
 
-const GanttChart = dynamic(
-  () => import("@/components/gantt/modern-gantt-chart"),
+const GanttTest = dynamic(
+  () => import("@/components/gantt/gantt-test"),
   { ssr: false }
 );
 
-interface GanttViewProps {
+interface GanttTestWrapperProps {
   tasks: TaskWithRelations[];
   projectKey: string;
   projectId: string;
@@ -20,16 +20,20 @@ interface GanttViewProps {
   statuses: TaskStatusConfig[];
 }
 
-/** ガントチャートビュー */
-export function GanttView({ tasks, projectKey, projectId, members, categories, statuses }: GanttViewProps) {
+export function GanttTestWrapper({
+  tasks,
+  projectKey,
+  projectId,
+  members,
+  categories,
+  statuses,
+}: GanttTestWrapperProps) {
   const router = useRouter();
   const [selectedTask, setSelectedTask] = useState<TaskWithRelations | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   /** タスククリック時のハンドラ（APIから最新データを取得） */
   const handleTaskClick = useCallback(async (taskId: string) => {
-    setIsLoading(true);
     try {
       const res = await fetch(`/api/tasks/${taskId}`);
       const json = await res.json();
@@ -39,40 +43,25 @@ export function GanttView({ tasks, projectKey, projectId, members, categories, s
       }
     } catch (error) {
       console.error("タスク取得エラー:", error);
-    } finally {
-      setIsLoading(false);
     }
   }, []);
 
   /** タスク更新成功時のハンドラ */
   const handleTaskUpdated = useCallback(() => {
-    // ページをリフレッシュして最新データを取得
     router.refresh();
   }, [router]);
 
   return (
-    <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
-      {/* ツールバー */}
-      <div className="flex items-center justify-between px-6 py-4">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          ガントチャート
-        </h1>
-      </div>
-
-      {/* ガントチャート本体 */}
-      <div className="gantt-wrapper min-w-0 flex-1 overflow-hidden px-8 pb-4">
-        <div className="h-full overflow-hidden rounded-lg border bg-card">
-          <GanttChart
-            tasks={tasks}
-            projectKey={projectKey}
-            projectId={projectId}
-            onTaskClick={handleTaskClick}
-          />
-        </div>
-      </div>
+    <>
+      <GanttTest
+        tasks={tasks}
+        projectKey={projectKey}
+        projectId={projectId}
+        onTaskClick={handleTaskClick}
+      />
 
       {/* 編集ダイアログ */}
-      {selectedTask && (
+      {selectedTask && statuses && statuses.length > 0 && (
         <EditTaskDialog
           task={selectedTask}
           projectId={projectId}
@@ -84,6 +73,6 @@ export function GanttView({ tasks, projectKey, projectId, members, categories, s
           onSuccess={handleTaskUpdated}
         />
       )}
-    </div>
+    </>
   );
 }

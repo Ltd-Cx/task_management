@@ -113,6 +113,20 @@ const GanttChart = memo(
           }
         });
 
+        // 行の並べ替え・移動を無効化
+        api.on("reorder-task", (ev: Record<string, unknown> & { cancel?: boolean }) => {
+          ev.cancel = true;
+        });
+        api.on("move-task", (ev: Record<string, unknown> & { cancel?: boolean }) => {
+          ev.cancel = true;
+        });
+        api.on("drag-task", (ev: Record<string, unknown> & { cancel?: boolean }) => {
+          // バーのドラッグは許可、行の移動のみキャンセル
+          if (ev.mode === "move") {
+            ev.cancel = true;
+          }
+        });
+
         // タスク更新イベント（ドラッグ/リサイズ時）
         api.on("update-task", (ev) => {
           if (ev.inProgress) return;

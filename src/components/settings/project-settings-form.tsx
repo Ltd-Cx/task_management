@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -47,10 +48,16 @@ export function ProjectSettingsForm({ project }: ProjectSettingsFormProps) {
 
   function onSubmit(values: SettingsFormValues) {
     startTransition(async () => {
-      await updateProject(project.id, {
+      const result = await updateProject(project.id, {
         name: values.name,
         description: values.description,
       });
+
+      if (result.success) {
+        toast.success("設定を保存しました");
+      } else {
+        toast.error(result.error ?? "設定の保存に失敗しました");
+      }
     });
   }
 

@@ -150,6 +150,27 @@
 .gantt-wrapper [role="columnheader"] {
   border-bottom: 1px solid var(--color-border);
 }
+/* ドラッグ時のゴースト要素を非表示 */
+.gantt-wrapper .wx-drag-ghost,
+.gantt-wrapper .wx-dragging,
+.gantt-wrapper [data-dragging="true"] {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+}
+/* 行のドラッグハンドルを非表示 */
+.gantt-wrapper .wx-drag-handle,
+.gantt-wrapper .wx-reorder-handle {
+  display: none !important;
+}
+/* グリッド部分でのドラッグカーソルを無効化 */
+.gantt-wrapper .wx-grid-body {
+  cursor: default !important;
+}
+.gantt-wrapper .wx-grid-body * {
+  cursor: pointer !important;
+  user-select: none;
+}
 
 .no-scrollbar::-webkit-scrollbar {
     display: none;
@@ -160,3 +181,22 @@
     -ms-overflow-style: none;  /* IE, Edge */
     scrollbar-width: none;     /* Firefox */
   }
+
+/* react-modern-gantt のz-index調整（ダイアログより下に） */
+.rmg-task-list,
+.rmg-task-list-header,
+.rmg-task-group {
+  z-index: 10 !important;
+}
+
+react-modern-gantt
+.rmg-task-list-header,
+.rmg-task-list-header[data-show-timeline-header="true"],
+.rmg-task-list-header[data-show-timeline-header="false"],
+.rmg-gantt-chart .rmg-task-list-header {
+  height: 34.5px !important;
+  min-height: 34.5px !important;
+  max-height: 34.5px !important;
+  box-sizing: border-box !important;
+}
+
