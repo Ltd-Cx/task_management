@@ -32,7 +32,7 @@ export default async function GanttPage({ params }: Props) {
       <ProjectHeader projectName={project.name} currentPage="ガントチャート" />
       <div className="flex-1 overflow-hidden gap-6 p-6">
         <PageToolbar title="ガントチャート" />
-        <div className="h-full rounded-lg border bg-card mt-8">
+        <div className="h-full mt-8 overflow-hidden">
           <GanttTestWrapper
             tasks={tasks}
             projectKey={project.key}

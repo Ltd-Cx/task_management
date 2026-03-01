@@ -202,7 +202,7 @@ export function GanttTest({ tasks: initialTasks, projectKey, projectId, onTaskCl
   }
 
   return (
-    <div style={{ width: "100%", height: "100%", position: "relative", zIndex: 1 }}>
+    <div style={{ width: "100%", height: "100%", position: "relative", zIndex: 1 }} className="gantt-no-shadow">
       <GanttChart
         tasks={tasks}
         onTaskUpdate={handleTaskUpdate}

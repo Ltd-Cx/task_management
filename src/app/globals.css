@@ -189,6 +189,36 @@
   z-index: 10 !important;
 }
 
+/* react-modern-gantt のshadowとborder-radiusを削除 */
+.rmg-gantt-chart,
+.rmg-gantt-container,
+.rmg-task-list,
+[class*="rmg-"] {
+  box-shadow: none !important;
+  border-radius: 0 !important;
+}
+
+/* より強力なshadow削除 */
+[class*="gantt"] *,
+[class*="Gantt"] * {
+  box-shadow: none !important;
+}
+
+/* ガントチャートのshadow削除・角丸設定 */
+.gantt-no-shadow * {
+  box-shadow: none !important;
+}
+
+.gantt-no-shadow > div {
+  border-radius: 0.5rem !important;
+  overflow: hidden !important;
+}
+
+/* 最後のタスクグループのborder-bottomを非表示 */
+.rmg-task-group:last-child {
+  border-bottom: none !important;
+}
+
 react-modern-gantt
 .rmg-task-list-header,
 .rmg-task-list-header[data-show-timeline-header="true"],
