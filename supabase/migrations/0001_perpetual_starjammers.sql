@@ -1,4 +1,4 @@
-CREATE TABLE "task_statuses" (
+	CREATE TABLE "task_statuses" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"project_id" uuid NOT NULL,
 	"key" text NOT NULL,
