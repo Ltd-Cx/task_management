@@ -132,7 +132,7 @@ export function EditTaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] flex-col sm:max-w-[560px]">
+      <DialogContent className="flex max-h-[90vh] w-[calc(100%-2rem)] flex-col sm:max-w-[560px] no-scrollbar">
         <DialogHeader>
           <DialogTitle>課題の編集</DialogTitle>
           <p className="text-sm text-muted-foreground">課題の内容を編集します。</p>

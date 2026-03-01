@@ -87,7 +87,7 @@ function SortableStatusItem({
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-3 rounded-lg border bg-card px-3 py-2"
+      className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2 sm:gap-3"
     >
       <button
         type="button"
@@ -98,28 +98,34 @@ function SortableStatusItem({
         <GripVertical className="size-4 text-muted-foreground" />
       </button>
       <span
-        className="size-3 rounded-full"
+        className="size-3 shrink-0 rounded-full"
         style={{ backgroundColor: status.color }}
       />
-      <span className="flex-1 text-sm font-medium">{status.label}</span>
-      <span className="text-xs text-muted-foreground">{status.key}</span>
-      {isDefault && (
-        <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
-          デフォルト
-        </span>
-      )}
-      <Button variant="ghost" size="sm" onClick={() => onEdit(status)} disabled={isPending}>
-        <Pencil className="size-3.5" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onDelete(status.id)}
-        disabled={isDefault || isPending}
-        title={isDefault ? "デフォルトステータスは削除できません" : "削除"}
-      >
-        <Trash2 className={`size-3.5 ${isDefault ? "text-muted-foreground" : "text-destructive"}`} />
-      </Button>
+      <div className="flex min-w-0 flex-1 flex-col sm:flex-row sm:items-center sm:gap-2">
+        <span className="truncate text-sm font-medium">{status.label}</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-muted-foreground">{status.key}</span>
+          {isDefault && (
+            <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
+              デフォルト
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="flex shrink-0 items-center">
+        <Button variant="ghost" size="sm" onClick={() => onEdit(status)} disabled={isPending}>
+          <Pencil className="size-3.5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onDelete(status.id)}
+          disabled={isDefault || isPending}
+          title={isDefault ? "デフォルトステータスは削除できません" : "削除"}
+        >
+          <Trash2 className={`size-3.5 ${isDefault ? "text-muted-foreground" : "text-destructive"}`} />
+        </Button>
+      </div>
     </div>
   );
 }
@@ -256,15 +262,17 @@ export function StatusManagement({ projectId, statuses }: StatusManagementProps)
             {localStatuses.map((status) => (
               <div
                 key={status.id}
-                className="flex items-center gap-3 rounded-lg border bg-card px-3 py-2"
+                className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2 sm:gap-3"
               >
                 <GripVertical className="size-4 text-muted-foreground" />
                 <span
-                  className="size-3 rounded-full"
+                  className="size-3 shrink-0 rounded-full"
                   style={{ backgroundColor: status.color }}
                 />
-                <span className="flex-1 text-sm font-medium">{status.label}</span>
-                <span className="text-xs text-muted-foreground">{status.key}</span>
+                <div className="flex min-w-0 flex-1 flex-col sm:flex-row sm:items-center sm:gap-2">
+                  <span className="truncate text-sm font-medium">{status.label}</span>
+                  <span className="text-xs text-muted-foreground">{status.key}</span>
+                </div>
               </div>
             ))}
           </div>

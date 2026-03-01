@@ -125,7 +125,7 @@ export function AddTaskDialog({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="flex max-h-[90vh] flex-col sm:max-w-[560px] no-scrollbar">
+      <DialogContent className="flex max-h-[90vh] w-[calc(100%-2rem)] flex-col sm:max-w-[560px] no-scrollbar">
         <DialogHeader>
           <DialogTitle>課題の追加</DialogTitle>
           <p className="text-sm text-muted-foreground">新しい課題をプロジェクトに追加します。</p>

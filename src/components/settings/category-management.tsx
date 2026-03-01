@@ -77,7 +77,7 @@ function SortableCategoryItem({
     <div
       ref={setNodeRef}
       style={style}
-      className="flex items-center gap-3 rounded-lg border bg-card px-3 py-2"
+      className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2 sm:gap-3"
     >
       <button
         type="button"
@@ -89,22 +89,24 @@ function SortableCategoryItem({
       </button>
       {category.color && (
         <span
-          className="size-3 rounded-full"
+          className="size-3 shrink-0 rounded-full"
           style={{ backgroundColor: category.color }}
         />
       )}
-      <span className="flex-1 text-sm font-medium">{category.name}</span>
-      <Button variant="ghost" size="sm" onClick={() => onEdit(category)} disabled={isPending}>
-        <Pencil className="size-3.5" />
-      </Button>
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => onDelete(category.id)}
-        disabled={isPending}
-      >
-        <Trash2 className="size-3.5 text-destructive" />
-      </Button>
+      <span className="min-w-0 flex-1 truncate text-sm font-medium">{category.name}</span>
+      <div className="flex shrink-0 items-center">
+        <Button variant="ghost" size="sm" onClick={() => onEdit(category)} disabled={isPending}>
+          <Pencil className="size-3.5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => onDelete(category.id)}
+          disabled={isPending}
+        >
+          <Trash2 className="size-3.5 text-destructive" />
+        </Button>
+      </div>
     </div>
   );
 }
@@ -237,16 +239,16 @@ export function CategoryManagement({ projectId, categories: initialCategories }:
             {localCategories.map((category) => (
               <div
                 key={category.id}
-                className="flex items-center gap-3 rounded-lg border bg-card px-3 py-2"
+                className="flex items-center gap-2 rounded-lg border bg-card px-3 py-2 sm:gap-3"
               >
                 <GripVertical className="size-4 text-muted-foreground" />
                 {category.color && (
                   <span
-                    className="size-3 rounded-full"
+                    className="size-3 shrink-0 rounded-full"
                     style={{ backgroundColor: category.color }}
                   />
                 )}
-                <span className="flex-1 text-sm font-medium">{category.name}</span>
+                <span className="min-w-0 flex-1 truncate text-sm font-medium">{category.name}</span>
               </div>
             ))}
           </div>
