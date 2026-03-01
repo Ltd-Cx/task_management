@@ -42,7 +42,7 @@ export const tasks = pgTable("tasks", {
   keyId: serial("key_id").notNull(),
   summary: text("summary").notNull(),
   description: text("description"),
-  status: taskStatusEnum("status").notNull().default("open"),
+  status: text("status").notNull().default("open"),
   priority: taskPriorityEnum("priority").notNull().default("medium"),
   assigneeId: uuid("assignee_id").references(() => users.id),
   categoryId: uuid("category_id").references(() => categories.id),

@@ -67,7 +67,7 @@ export async function createTask(data: {
     await db.insert(tasks).values({
       ...taskData,
       description: sanitizedDescription,
-      status: (status as "open" | "in_progress" | "resolved" | "closed") ?? "open",
+      status: status ?? "open",
       projectId,
       assigneeId: assigneeId || null,
       categoryId: categoryId || null,
@@ -107,7 +107,7 @@ export async function updateTaskStatus(data: {
     await db
       .update(tasks)
       .set({
-        status: parsed.data.status as "open" | "in_progress" | "resolved" | "closed",
+        status: parsed.data.status,
         updatedAt: new Date(),
       })
       .where(eq(tasks.id, parsed.data.taskId));
@@ -193,7 +193,7 @@ export async function updateTask(data: {
       .set({
         ...taskData,
         description: sanitizedDescription,
-        status: status as "open" | "in_progress" | "resolved" | "closed" | undefined,
+        status: status,
         assigneeId: assigneeId || null,
         categoryId: categoryId || null,
         startDate: taskData.startDate || null,
