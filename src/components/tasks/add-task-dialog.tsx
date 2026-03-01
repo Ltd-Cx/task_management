@@ -125,7 +125,7 @@ export function AddTaskDialog({
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="flex max-h-[90vh] w-[calc(100%-2rem)] flex-col sm:max-w-[560px] no-scrollbar">
+      <DialogContent className="flex max-h-[90vh] w-[calc(100%-2rem)] max-w-[640px] flex-col no-scrollbar">
         <DialogHeader>
           <DialogTitle>課題の追加</DialogTitle>
           <p className="text-sm text-muted-foreground">新しい課題をプロジェクトに追加します。</p>
@@ -133,7 +133,7 @@ export function AddTaskDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-1 flex-col space-y-8 overflow-hidden">
-            <div className="flex-1 space-y-8 overflow-y-auto px-1">
+            <div className="flex-1 space-y-8 overflow-x-hidden overflow-y-auto px-1 w-full">
             {/* 件名 */}
             <FormField
               control={form.control}

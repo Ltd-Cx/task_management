@@ -132,7 +132,7 @@ export function EditTaskDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[90vh] w-[calc(100%-2rem)] flex-col sm:max-w-[560px] no-scrollbar">
+      <DialogContent className="flex max-h-[90vh] w-[calc(100%-2rem)] max-w-[640px] flex-col no-scrollbar">
         <DialogHeader>
           <DialogTitle>課題の編集</DialogTitle>
           <p className="text-sm text-muted-foreground">課題の内容を編集します。</p>
@@ -140,7 +140,7 @@ export function EditTaskDialog({
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-1 flex-col overflow-hidden">
-            <div className="flex-1 space-y-8 overflow-y-auto px-1 no-scrollbar">
+            <div className="flex-1 space-y-8 overflow-x-hidden overflow-y-auto px-1 no-scrollbar w-full">
             {/* 件名 */}
             <FormField
               control={form.control}
