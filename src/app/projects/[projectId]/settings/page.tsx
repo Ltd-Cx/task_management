@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
-import { getProject } from "@/db/queries/projects";
+import { getProject, getCategories } from "@/db/queries/projects";
 import { getProjectStatuses } from "@/db/queries/statuses";
 import { getCurrentUser } from "@/db/queries/users";
 import { ProjectHeader } from "@/components/project-header";
 import { PageToolbar } from "@/components/shared/page-toolbar";
 import { ProjectSettingsForm } from "@/components/settings/project-settings-form";
 import { StatusManagement } from "@/components/settings/status-management";
+import { CategoryManagement } from "@/components/settings/category-management";
 import { AvatarSettings } from "@/components/settings/avatar-settings";
 import { DangerZone } from "@/components/settings/danger-zone";
 
@@ -16,9 +17,10 @@ type Props = {
 /** プロジェクト設定ページ */
 export default async function SettingsPage({ params }: Props) {
   const { projectId } = await params;
-  const [project, statuses, currentUser] = await Promise.all([
+  const [project, statuses, categories, currentUser] = await Promise.all([
     getProject(projectId),
     getProjectStatuses(projectId),
+    getCategories(projectId),
     getCurrentUser(),
   ]);
 
@@ -34,6 +36,7 @@ export default async function SettingsPage({ params }: Props) {
         <ProjectSettingsForm project={project} />
         {currentUser && <AvatarSettings user={currentUser} />}
         <StatusManagement projectId={project.id} statuses={statuses} />
+        <CategoryManagement projectId={project.id} categories={categories} />
         {/* <DangerZone projectId={project.id} projectName={project.name} /> */}
       </div>
     </>

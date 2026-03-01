@@ -32,20 +32,12 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { createCustomStatus, deleteCustomStatus, updateCustomStatus, reorderStatuses } from "@/actions/status-actions";
-import type { TaskStatusConfig } from "@/types";
+import { createCategory, deleteCategory, updateCategory, reorderCategories } from "@/actions/category-actions";
+import type { Category } from "@/types";
 
-interface StatusManagementProps {
+interface CategoryManagementProps {
   projectId: string;
-  statuses: TaskStatusConfig[];
-}
-
-/** デフォルトステータスのキー（削除不可） */
-const DEFAULT_STATUS_KEYS = ["open", "in_progress", "resolved", "closed"];
-
-/** デフォルトステータスかどうかを判定 */
-function isDefaultStatus(key: string): boolean {
-  return DEFAULT_STATUS_KEYS.includes(key);
+  categories: Category[];
 }
 
 const PRESET_COLORS = [
@@ -54,17 +46,15 @@ const PRESET_COLORS = [
   "#6B7280", "#0EA5E9",
 ];
 
-/** ソート可能なステータスアイテム */
-function SortableStatusItem({
-  status,
-  isDefault,
+/** ソート可能なカテゴリーアイテム */
+function SortableCategoryItem({
+  category,
   onEdit,
   onDelete,
   isPending,
 }: {
-  status: TaskStatusConfig;
-  isDefault: boolean;
-  onEdit: (status: TaskStatusConfig) => void;
+  category: Category;
+  onEdit: (category: Category) => void;
   onDelete: (id: string) => void;
   isPending: boolean;
 }) {
@@ -75,7 +65,7 @@ function SortableStatusItem({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: status.id });
+  } = useSortable({ id: category.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
@@ -97,39 +87,34 @@ function SortableStatusItem({
       >
         <GripVertical className="size-4 text-muted-foreground" />
       </button>
-      <span
-        className="size-3 rounded-full"
-        style={{ backgroundColor: status.color }}
-      />
-      <span className="flex-1 text-sm font-medium">{status.label}</span>
-      <span className="text-xs text-muted-foreground">{status.key}</span>
-      {isDefault && (
-        <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
-          デフォルト
-        </span>
+      {category.color && (
+        <span
+          className="size-3 rounded-full"
+          style={{ backgroundColor: category.color }}
+        />
       )}
-      <Button variant="ghost" size="sm" onClick={() => onEdit(status)} disabled={isPending}>
+      <span className="flex-1 text-sm font-medium">{category.name}</span>
+      <Button variant="ghost" size="sm" onClick={() => onEdit(category)} disabled={isPending}>
         <Pencil className="size-3.5" />
       </Button>
       <Button
         variant="ghost"
         size="sm"
-        onClick={() => onDelete(status.id)}
-        disabled={isDefault || isPending}
-        title={isDefault ? "デフォルトステータスは削除できません" : "削除"}
+        onClick={() => onDelete(category.id)}
+        disabled={isPending}
       >
-        <Trash2 className={`size-3.5 ${isDefault ? "text-muted-foreground" : "text-destructive"}`} />
+        <Trash2 className="size-3.5 text-destructive" />
       </Button>
     </div>
   );
 }
 
-/** ステータス管理セクション */
-export function StatusManagement({ projectId, statuses }: StatusManagementProps) {
+/** カテゴリー管理セクション */
+export function CategoryManagement({ projectId, categories: initialCategories }: CategoryManagementProps) {
   const [isPending, startTransition] = useTransition();
   const [addOpen, setAddOpen] = useState(false);
-  const [editingStatus, setEditingStatus] = useState<TaskStatusConfig | null>(null);
-  const [localStatuses, setLocalStatuses] = useState<TaskStatusConfig[]>(statuses);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [localCategories, setLocalCategories] = useState<Category[]>(initialCategories);
   const [isMounted, setIsMounted] = useState(false);
   const dndContextId = useId();
 
@@ -139,12 +124,11 @@ export function StatusManagement({ projectId, statuses }: StatusManagementProps)
   }, []);
 
   // 追加フォーム
-  const [newKey, setNewKey] = useState("");
-  const [newLabel, setNewLabel] = useState("");
+  const [newName, setNewName] = useState("");
   const [newColor, setNewColor] = useState("#3B82F6");
 
   // 編集フォーム
-  const [editLabel, setEditLabel] = useState("");
+  const [editName, setEditName] = useState("");
   const [editColor, setEditColor] = useState("");
 
   // DnD センサー設定
@@ -157,83 +141,80 @@ export function StatusManagement({ projectId, statuses }: StatusManagementProps)
     })
   );
 
-  // props の statuses が変更されたら localStatuses も更新
-  if (statuses !== localStatuses && statuses.length !== localStatuses.length) {
-    setLocalStatuses(statuses);
-  }
+  // props の categories が変更されたら localCategories も更新
+  useEffect(() => {
+    setLocalCategories(initialCategories);
+  }, [initialCategories]);
 
   /** ドラッグ終了時のハンドラ */
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = localStatuses.findIndex((s) => s.id === active.id);
-    const newIndex = localStatuses.findIndex((s) => s.id === over.id);
+    const oldIndex = localCategories.findIndex((c) => c.id === active.id);
+    const newIndex = localCategories.findIndex((c) => c.id === over.id);
 
-    const newOrder = arrayMove(localStatuses, oldIndex, newIndex);
-    setLocalStatuses(newOrder);
+    const newOrder = arrayMove(localCategories, oldIndex, newIndex);
+    setLocalCategories(newOrder);
 
     // displayOrder を更新
     startTransition(async () => {
-      await reorderStatuses({
+      await reorderCategories({
         projectId,
-        items: newOrder.map((s, index) => ({ id: s.id, displayOrder: index })),
+        items: newOrder.map((c, index) => ({ id: c.id, displayOrder: index })),
       });
     });
   }
 
   function handleAdd() {
-    if (!newKey || !newLabel) return;
+    if (!newName) return;
     startTransition(async () => {
-      const result = await createCustomStatus({
+      const result = await createCategory({
         projectId,
-        key: newKey,
-        label: newLabel,
+        name: newName,
         color: newColor,
       });
       if (result.success) {
         setAddOpen(false);
-        setNewKey("");
-        setNewLabel("");
+        setNewName("");
         setNewColor("#3B82F6");
       }
     });
   }
 
   function handleEdit() {
-    if (!editingStatus || !editLabel) return;
+    if (!editingCategory || !editName) return;
     startTransition(async () => {
-      const result = await updateCustomStatus({
-        id: editingStatus.id,
+      const result = await updateCategory({
+        id: editingCategory.id,
         projectId,
-        label: editLabel,
+        name: editName,
         color: editColor,
-        displayOrder: editingStatus.displayOrder,
       });
       if (result.success) {
-        setEditingStatus(null);
+        setEditingCategory(null);
       }
     });
   }
 
   function handleDelete(id: string) {
-    if (!confirm("このステータスを削除しますか？")) return;
+    if (!confirm("このカテゴリーを削除しますか？")) return;
     startTransition(async () => {
-      await deleteCustomStatus({ id, projectId });
+      await deleteCategory({ id, projectId });
     });
   }
 
-  function openEdit(status: TaskStatusConfig) {
-    setEditingStatus(status);
-    setEditLabel(status.label);
-    setEditColor(status.color);
+  function openEdit(category: Category) {
+    setEditingCategory(category);
+    setEditName(category.name);
+    setEditColor(category.color ?? "#6B7280");
   }
 
   return (
     <Card className="shadow-sm">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>ステータス</CardTitle>
+          <CardTitle>カテゴリー</CardTitle>
           <Button variant="outline" size="sm" onClick={() => setAddOpen(true)}>
             <Plus className="size-4" />
             追加
@@ -243,28 +224,29 @@ export function StatusManagement({ projectId, statuses }: StatusManagementProps)
       <CardContent>
         <Separator className="mb-4" />
         <p className="mb-4 text-sm text-muted-foreground">
-          デフォルトステータス（未対応・処理中・処理済み・完了）に加えて、プロジェクト固有のステータスを追加できます。
+          課題を分類するためのカテゴリーを管理します。ドラッグで並び替えができます。
         </p>
 
-        {localStatuses.length === 0 ? (
+        {localCategories.length === 0 ? (
           <p className="py-4 text-center text-sm text-muted-foreground">
-            ステータスはまだ追加されていません
+            カテゴリーはまだ追加されていません
           </p>
         ) : !isMounted ? (
           // SSR時は静的なリストを表示
           <div className="space-y-2">
-            {localStatuses.map((status) => (
+            {localCategories.map((category) => (
               <div
-                key={status.id}
+                key={category.id}
                 className="flex items-center gap-3 rounded-lg border bg-card px-3 py-2"
               >
                 <GripVertical className="size-4 text-muted-foreground" />
-                <span
-                  className="size-3 rounded-full"
-                  style={{ backgroundColor: status.color }}
-                />
-                <span className="flex-1 text-sm font-medium">{status.label}</span>
-                <span className="text-xs text-muted-foreground">{status.key}</span>
+                {category.color && (
+                  <span
+                    className="size-3 rounded-full"
+                    style={{ backgroundColor: category.color }}
+                  />
+                )}
+                <span className="flex-1 text-sm font-medium">{category.name}</span>
               </div>
             ))}
           </div>
@@ -276,15 +258,14 @@ export function StatusManagement({ projectId, statuses }: StatusManagementProps)
             onDragEnd={handleDragEnd}
           >
             <SortableContext
-              items={localStatuses.map((s) => s.id)}
+              items={localCategories.map((c) => c.id)}
               strategy={verticalListSortingStrategy}
             >
               <div className="space-y-2">
-                {localStatuses.map((status) => (
-                  <SortableStatusItem
-                    key={status.id}
-                    status={status}
-                    isDefault={isDefaultStatus(status.key)}
+                {localCategories.map((category) => (
+                  <SortableCategoryItem
+                    key={category.id}
+                    category={category}
                     onEdit={openEdit}
                     onDelete={handleDelete}
                     isPending={isPending}
@@ -300,23 +281,15 @@ export function StatusManagement({ projectId, statuses }: StatusManagementProps)
       <Dialog open={addOpen} onOpenChange={setAddOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>ステータスを追加</DialogTitle>
+            <DialogTitle>カテゴリーを追加</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>キー（英数字）</Label>
+              <Label>カテゴリー名</Label>
               <Input
-                placeholder="review"
-                value={newKey}
-                onChange={(e) => setNewKey(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>表示名</Label>
-              <Input
-                placeholder="レビュー中"
-                value={newLabel}
-                onChange={(e) => setNewLabel(e.target.value)}
+                placeholder="バグ"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
               />
             </div>
             <div className="space-y-2">
@@ -338,7 +311,7 @@ export function StatusManagement({ projectId, statuses }: StatusManagementProps)
             <DialogClose asChild>
               <Button variant="outline">キャンセル</Button>
             </DialogClose>
-            <Button onClick={handleAdd} disabled={isPending || !newKey || !newLabel}>
+            <Button onClick={handleAdd} disabled={isPending || !newName}>
               {isPending ? "追加中..." : "追加する"}
             </Button>
           </DialogFooter>
@@ -346,17 +319,17 @@ export function StatusManagement({ projectId, statuses }: StatusManagementProps)
       </Dialog>
 
       {/* 編集ダイアログ */}
-      <Dialog open={!!editingStatus} onOpenChange={(open) => { if (!open) setEditingStatus(null); }}>
+      <Dialog open={!!editingCategory} onOpenChange={(open) => { if (!open) setEditingCategory(null); }}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>ステータスを編集</DialogTitle>
+            <DialogTitle>カテゴリーを編集</DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label>表示名</Label>
+              <Label>カテゴリー名</Label>
               <Input
-                value={editLabel}
-                onChange={(e) => setEditLabel(e.target.value)}
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
               />
             </div>
             <div className="space-y-2">
@@ -378,7 +351,7 @@ export function StatusManagement({ projectId, statuses }: StatusManagementProps)
             <DialogClose asChild>
               <Button variant="outline">キャンセル</Button>
             </DialogClose>
-            <Button onClick={handleEdit} disabled={isPending || !editLabel}>
+            <Button onClick={handleEdit} disabled={isPending || !editName}>
               {isPending ? "保存中..." : "保存する"}
             </Button>
           </DialogFooter>
