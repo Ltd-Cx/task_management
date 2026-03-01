@@ -219,6 +219,11 @@
   border-bottom: none !important;
 }
 
+/* 今日マーカーのz-index */
+.rmg-today-marker {
+  z-index: 2 !important;
+}
+
 react-modern-gantt
 .rmg-task-list-header,
 .rmg-task-list-header[data-show-timeline-header="true"],
