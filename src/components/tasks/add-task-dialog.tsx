@@ -25,6 +25,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import { TipTapEditor } from "@/components/ui/tiptap-editor";
 import {
   Select,
@@ -287,7 +288,11 @@ export function AddTaskDialog({
                   <FormItem className="min-w-0">
                     <FormLabel>開始日</FormLabel>
                     <FormControl>
-                      <Input type="date" className="w-full" {...field} />
+                      <DatePicker
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="開始日を選択"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -300,7 +305,11 @@ export function AddTaskDialog({
                   <FormItem className="min-w-0">
                     <FormLabel>期限日</FormLabel>
                     <FormControl>
-                      <Input type="date" className="w-full" {...field} />
+                      <DatePicker
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder="期限日を選択"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
