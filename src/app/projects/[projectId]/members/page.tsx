@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import { getProject } from "@/db/queries/projects";
 import { getProjectMembersWithUsers } from "@/db/queries/members";
+import { getAvailableUsersForProject } from "@/db/queries/users";
 import { ProjectHeader } from "@/components/project-header";
 import { PageToolbar } from "@/components/shared/page-toolbar";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { MemberTable } from "@/components/members/member-table";
+import { AddMemberDialog } from "@/components/members/add-member-dialog";
+import { AddUserDialog } from "@/components/members/add-user-dialog";
 
 type Props = {
   params: Promise<{ projectId: string }>;
@@ -15,9 +16,10 @@ type Props = {
 export default async function MembersPage({ params }: Props) {
   const { projectId } = await params;
 
-  const [project, members] = await Promise.all([
+  const [project, members, availableUsers] = await Promise.all([
     getProject(projectId),
     getProjectMembersWithUsers(projectId),
+    getAvailableUsersForProject(projectId),
   ]);
 
   if (!project) {
@@ -29,10 +31,10 @@ export default async function MembersPage({ params }: Props) {
       <ProjectHeader projectName={project.name} currentPage="メンバー" />
       <div className="flex flex-1 flex-col gap-6 p-6">
         <PageToolbar title="メンバー">
-          <Button size="sm">
-            <Plus className="size-4" />
-            メンバー追加
-          </Button>
+          <div className="flex gap-2">
+            <AddUserDialog projectId={projectId} />
+            {/* <AddMemberDialog projectId={projectId} availableUsers={availableUsers} /> */}
+          </div>
         </PageToolbar>
 
         <MemberTable members={members} />

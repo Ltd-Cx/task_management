@@ -40,7 +40,8 @@ export type DynamicTasksByStatus = Record<string, TaskWithRelations[]>;
 export type TaskStatusConfig = InferSelectModel<typeof taskStatuses>;
 
 // --- Server Action のレスポンス型 ---
-export type ActionResult = {
+export type ActionResult<T = void> = {
   success: boolean;
   error?: string;
+  data?: T;
 };

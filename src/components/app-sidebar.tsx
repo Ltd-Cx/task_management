@@ -22,6 +22,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { Input } from "@/components/ui/input";
 import type { Project, User } from "@/types";
@@ -54,11 +55,17 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
 /** プロジェクト用サイドバー */
 export function AppSidebar({ project, currentUser, ...props }: AppSidebarProps) {
   const pathname = usePathname();
+  const { setOpenMobile } = useSidebar();
   const basePath = `/projects/${project.id}`;
 
   const displayName = currentUser?.displayName ?? "ゲスト";
   const email = currentUser?.email ?? "";
   const avatarUrl = currentUser?.avatarUrl ?? undefined;
+
+  /** モバイルでサイドバーを閉じる */
+  const handleLinkClick = () => {
+    setOpenMobile(false);
+  };
 
   return (
     <Sidebar variant="inset" {...props}>
@@ -67,7 +74,7 @@ export function AppSidebar({ project, currentUser, ...props }: AppSidebarProps) 
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href={basePath}>
+              <Link href={basePath} onClick={handleLinkClick}>
                 <Avatar>
                   <AvatarImage src={avatarUrl} alt={project.name} />
                   <AvatarFallback className="bg-primary text-primary-foreground">
@@ -103,7 +110,7 @@ export function AppSidebar({ project, currentUser, ...props }: AppSidebarProps) 
                 return (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={isActive}>
-                      <Link href={href}>
+                      <Link href={href} onClick={handleLinkClick}>
                         <Icon className="size-4" />
                         <span>{item.title}</span>
                       </Link>
