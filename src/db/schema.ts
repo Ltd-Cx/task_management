@@ -35,6 +35,16 @@ export const categories = pgTable("categories", {
   displayOrder: integer("display_order").notNull().default(0),
 });
 
+// Task Groups（ガントチャート用グループ）
+export const taskGroups = pgTable("task_groups", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  projectId: uuid("project_id").references(() => projects.id, { onDelete: "cascade" }).notNull(),
+  name: text("name").notNull(),
+  color: text("color").notNull().default("#95a5a6"),
+  displayOrder: integer("display_order").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
 // Tasks
 export const tasks = pgTable("tasks", {
   id: uuid("id").defaultRandom().primaryKey(),
@@ -46,9 +56,11 @@ export const tasks = pgTable("tasks", {
   priority: taskPriorityEnum("priority").notNull().default("medium"),
   assigneeId: uuid("assignee_id").references(() => users.id),
   categoryId: uuid("category_id").references(() => categories.id),
+  taskGroupId: uuid("task_group_id").references(() => taskGroups.id, { onDelete: "set null" }),
   parentId: uuid("parent_id"), // 自己参照は後で .references(() => tasks.id) を追加
   startDate: date("start_date"),
   dueDate: date("due_date"),
+  progress: integer("progress").notNull().default(0),
   createdBy: uuid("created_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
@@ -80,6 +92,7 @@ export const projectsRelations = relations(projects, ({ many }) => ({
   categories: many(categories),
   members: many(projectMembers),
   statuses: many(taskStatuses),
+  taskGroups: many(taskGroups),
 }));
 
 export const usersRelations = relations(users, ({ many }) => ({
@@ -101,6 +114,10 @@ export const tasksRelations = relations(tasks, ({ one }) => ({
   category: one(categories, {
     fields: [tasks.categoryId],
     references: [categories.id],
+  }),
+  taskGroup: one(taskGroups, {
+    fields: [tasks.taskGroupId],
+    references: [taskGroups.id],
   }),
   creator: one(users, {
     fields: [tasks.createdBy],
@@ -133,4 +150,12 @@ export const taskStatusesRelations = relations(taskStatuses, ({ one }) => ({
     fields: [taskStatuses.projectId],
     references: [projects.id],
   }),
+}));
+
+export const taskGroupsRelations = relations(taskGroups, ({ one, many }) => ({
+  project: one(projects, {
+    fields: [taskGroups.projectId],
+    references: [projects.id],
+  }),
+  tasks: many(tasks),
 }));

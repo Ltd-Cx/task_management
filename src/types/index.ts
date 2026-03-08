@@ -6,6 +6,7 @@ import type {
   projects,
   projectMembers,
   taskStatuses,
+  taskGroups,
 } from "@/db/schema";
 
 // --- Drizzle スキーマから推論される基本型 ---
@@ -14,6 +15,7 @@ export type User = InferSelectModel<typeof users>;
 export type Category = InferSelectModel<typeof categories>;
 export type Project = InferSelectModel<typeof projects>;
 export type ProjectMember = InferSelectModel<typeof projectMembers>;
+export type TaskGroup = InferSelectModel<typeof taskGroups>;
 
 // --- ステータス・優先度のリテラル型 ---
 export type TaskStatus = Task["status"];
@@ -24,6 +26,7 @@ export type UserRole = User["role"];
 export type TaskWithRelations = Task & {
   assignee: User | null;
   category: Category | null;
+  taskGroup?: TaskGroup | null;
 };
 
 export type ProjectMemberWithUser = ProjectMember & {

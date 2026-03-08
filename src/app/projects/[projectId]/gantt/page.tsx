@@ -3,8 +3,9 @@ import { getProject, getCategories } from "@/db/queries/projects";
 import { getProjectMembersWithUsers } from "@/db/queries/members";
 import { getTasksWithDates } from "@/db/queries/tasks";
 import { getProjectStatusesWithDefaults } from "@/db/queries/statuses";
+import { getTaskGroups } from "@/db/queries/task-groups";
 import { ProjectHeader } from "@/components/project-header";
-import { GanttTestWrapper } from "./gantt-test-wrapper";
+import { GanttView } from "@/components/gantt/gantt-view";
 import { PageToolbar } from "@/components/shared/page-toolbar";
 
 type Props = {
@@ -15,13 +16,15 @@ type Props = {
 export default async function GanttPage({ params }: Props) {
   const { projectId } = await params;
 
-  const [project, tasks, members, categories, statuses] = await Promise.all([
-    getProject(projectId),
-    getTasksWithDates(projectId),
-    getProjectMembersWithUsers(projectId),
-    getCategories(projectId),
-    getProjectStatusesWithDefaults(projectId),
-  ]);
+  const [project, tasks, members, categories, statuses, taskGroups] =
+    await Promise.all([
+      getProject(projectId),
+      getTasksWithDates(projectId),
+      getProjectMembersWithUsers(projectId),
+      getCategories(projectId),
+      getProjectStatusesWithDefaults(projectId),
+      getTaskGroups(projectId),
+    ]);
 
   if (!project) {
     notFound();
@@ -30,11 +33,12 @@ export default async function GanttPage({ params }: Props) {
   return (
     <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
       <ProjectHeader projectName={project.name} currentPage="ガントチャート" />
-      <div className="flex-1 overflow-hidden gap-6 p-6">
+      <div className="flex flex-1 flex-col gap-6 overflow-hidden p-6">
         <PageToolbar title="ガントチャート" />
-        <div className="h-full mt-8 overflow-hidden">
-          <GanttTestWrapper
+        <div className="min-h-0 flex-1 overflow-hidden">
+          <GanttView
             tasks={tasks}
+            taskGroups={taskGroups}
             projectKey={project.key}
             projectId={projectId}
             members={members}
