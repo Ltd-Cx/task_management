@@ -1,11 +1,11 @@
 import { eq } from "drizzle-orm";
 import { db } from "@/db";
-import { projectMembers } from "@/db/schema";
+import { repositoryMembers } from "@/db/schema";
 
-/** プロジェクトメンバー一覧（ユーザー情報含む）を取得 */
-export async function getProjectMembersWithUsers(projectId: string) {
-  return db.query.projectMembers.findMany({
-    where: eq(projectMembers.projectId, projectId),
+/** リポジトリメンバー一覧（ユーザー情報含む）を取得 */
+export async function getRepositoryMembersWithUsers(repositoryId: string) {
+  return db.query.repositoryMembers.findMany({
+    where: eq(repositoryMembers.repositoryId, repositoryId),
     with: {
       user: true,
     },

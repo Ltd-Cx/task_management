@@ -1,6 +1,6 @@
 import { eq, notInArray } from "drizzle-orm";
 import { db } from "@/db";
-import { users, projectMembers } from "@/db/schema";
+import { users, repositoryMembers } from "@/db/schema";
 
 /** ユーザーをIDで取得 */
 export async function getUserById(userId: string) {
@@ -32,11 +32,11 @@ export async function getAllUsers() {
   });
 }
 
-/** プロジェクトに未参加のユーザーを取得 */
-export async function getAvailableUsersForProject(projectId: string) {
-  // プロジェクトに既に参加しているユーザーIDを取得
-  const existingMembers = await db.query.projectMembers.findMany({
-    where: eq(projectMembers.projectId, projectId),
+/** リポジトリに未参加のユーザーを取得 */
+export async function getAvailableUsersForRepository(repositoryId: string) {
+  // リポジトリに既に参加しているユーザーIDを取得
+  const existingMembers = await db.query.repositoryMembers.findMany({
+    where: eq(repositoryMembers.repositoryId, repositoryId),
     columns: {
       userId: true,
     },

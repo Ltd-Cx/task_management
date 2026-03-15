@@ -4,21 +4,21 @@ import { z } from "zod";
 import { and, eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
-import { projectMembers } from "@/db/schema";
+import { repositoryMembers } from "@/db/schema";
 import type { ActionResult } from "@/types";
 
 /** メンバー追加のバリデーションスキーマ */
 const addMemberSchema = z.object({
-  projectId: z.string().uuid(),
+  repositoryId: z.string().uuid(),
   userId: z.string().uuid(),
   role: z.enum(["admin", "member"]).optional(),
 });
 
 /**
- * プロジェクトにメンバーを追加する
+ * リポジトリにメンバーを追加する
  */
 export async function addMember(data: {
-  projectId: string;
+  repositoryId: string;
   userId: string;
   role?: string;
 }): Promise<ActionResult> {
@@ -29,24 +29,24 @@ export async function addMember(data: {
     }
 
     // 重複チェック
-    const existing = await db.query.projectMembers.findFirst({
+    const existing = await db.query.repositoryMembers.findFirst({
       where: and(
-        eq(projectMembers.projectId, parsed.data.projectId),
-        eq(projectMembers.userId, parsed.data.userId)
+        eq(repositoryMembers.repositoryId, parsed.data.repositoryId),
+        eq(repositoryMembers.userId, parsed.data.userId)
       ),
     });
 
     if (existing) {
-      return { success: false, error: "このユーザーは既にプロジェクトメンバーです" };
+      return { success: false, error: "このユーザーは既にリポジトリメンバーです" };
     }
 
-    await db.insert(projectMembers).values({
-      projectId: parsed.data.projectId,
+    await db.insert(repositoryMembers).values({
+      repositoryId: parsed.data.repositoryId,
       userId: parsed.data.userId,
       role: parsed.data.role ?? "member",
     });
 
-    revalidatePath(`/projects/${parsed.data.projectId}/members`);
+    revalidatePath(`/repositories/${parsed.data.repositoryId}/members`);
     return { success: true };
   } catch (error) {
     const message = error instanceof Error ? error.message : "メンバーの追加に失敗しました";
@@ -55,23 +55,23 @@ export async function addMember(data: {
 }
 
 /**
- * プロジェクトからメンバーを削除する
+ * リポジトリからメンバーを削除する
  */
 export async function removeMember(data: {
-  projectId: string;
+  repositoryId: string;
   userId: string;
 }): Promise<ActionResult> {
   try {
     await db
-      .delete(projectMembers)
+      .delete(repositoryMembers)
       .where(
         and(
-          eq(projectMembers.projectId, data.projectId),
-          eq(projectMembers.userId, data.userId)
+          eq(repositoryMembers.repositoryId, data.repositoryId),
+          eq(repositoryMembers.userId, data.userId)
         )
       );
 
-    revalidatePath(`/projects/${data.projectId}/members`);
+    revalidatePath(`/repositories/${data.repositoryId}/members`);
     return { success: true };
   } catch (error) {
     const message = error instanceof Error ? error.message : "メンバーの削除に失敗しました";
@@ -81,7 +81,7 @@ export async function removeMember(data: {
 
 /** メンバー更新のバリデーションスキーマ */
 const updateMemberSchema = z.object({
-  projectId: z.string().uuid(),
+  repositoryId: z.string().uuid(),
   userId: z.string().uuid(),
   role: z.enum(["admin", "member"]),
 });
@@ -90,7 +90,7 @@ const updateMemberSchema = z.object({
  * メンバー情報を更新する
  */
 export async function updateMember(data: {
-  projectId: string;
+  repositoryId: string;
   userId: string;
   role: string;
 }): Promise<ActionResult> {
@@ -101,16 +101,16 @@ export async function updateMember(data: {
     }
 
     await db
-      .update(projectMembers)
+      .update(repositoryMembers)
       .set({ role: parsed.data.role })
       .where(
         and(
-          eq(projectMembers.projectId, parsed.data.projectId),
-          eq(projectMembers.userId, parsed.data.userId)
+          eq(repositoryMembers.repositoryId, parsed.data.repositoryId),
+          eq(repositoryMembers.userId, parsed.data.userId)
         )
       );
 
-    revalidatePath(`/projects/${parsed.data.projectId}/members`);
+    revalidatePath(`/repositories/${parsed.data.repositoryId}/members`);
     return { success: true };
   } catch (error) {
     const message = error instanceof Error ? error.message : "メンバーの更新に失敗しました";

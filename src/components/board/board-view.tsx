@@ -19,12 +19,12 @@ import type { DynamicTasksByStatus, TaskWithRelations, TaskStatusConfig } from "
 interface BoardViewProps {
   tasksByStatus: DynamicTasksByStatus;
   statuses: TaskStatusConfig[];
-  projectKey: string;
-  projectId: string;
+  repositoryKey: string;
+  repositoryId: string;
 }
 
 /** ボードビュー（カンバン全体） */
-export function BoardView({ tasksByStatus, statuses, projectKey, projectId }: BoardViewProps) {
+export function BoardView({ tasksByStatus, statuses, repositoryKey, repositoryId }: BoardViewProps) {
   const [localTasks, setLocalTasks] = useState<DynamicTasksByStatus>(tasksByStatus);
   const [activeTask, setActiveTask] = useState<TaskWithRelations | null>(null);
 
@@ -100,7 +100,7 @@ export function BoardView({ tasksByStatus, statuses, projectKey, projectId }: Bo
     });
 
     // Server Action 実行
-    updateTaskStatus({ taskId, status: newStatus, projectId });
+    updateTaskStatus({ taskId, status: newStatus, repositoryId });
   }
 
   return (
@@ -117,14 +117,14 @@ export function BoardView({ tasksByStatus, statuses, projectKey, projectId }: Bo
             status={statusConfig.key}
             statusConfig={statusConfig}
             tasks={localTasks[statusConfig.key] ?? []}
-            projectKey={projectKey}
+            repositoryKey={repositoryKey}
           />
         ))}
       </div>
 
       <DragOverlay>
         {activeTask && (
-          <BoardCard task={activeTask} projectKey={projectKey} isDragOverlay />
+          <BoardCard task={activeTask} repositoryKey={repositoryKey} isDragOverlay />
         )}
       </DragOverlay>
     </DndContext>

@@ -3,11 +3,11 @@
 import { PageToolbar } from "@/components/shared/page-toolbar";
 import { AddTaskDialog } from "@/components/tasks/add-task-dialog";
 import type { TaskGroupWithCount } from "@/components/tasks/add-task-group-dialog";
-import type { ProjectMemberWithUser, Category, TaskStatusConfig } from "@/types";
+import type { RepositoryMemberWithUser, Category, TaskStatusConfig } from "@/types";
 
 interface TaskListToolbarProps {
-  projectId: string;
-  members: ProjectMemberWithUser[];
+  repositoryId: string;
+  members: RepositoryMemberWithUser[];
   categories: Category[];
   statuses: TaskStatusConfig[];
   taskGroups: TaskGroupWithCount[];
@@ -15,7 +15,7 @@ interface TaskListToolbarProps {
 
 /** 課題一覧ツールバー */
 export function TaskListToolbar({
-  projectId,
+  repositoryId,
   members,
   categories,
   statuses,
@@ -24,7 +24,7 @@ export function TaskListToolbar({
   return (
     <PageToolbar title="課題">
       <AddTaskDialog
-        projectId={projectId}
+        repositoryId={repositoryId}
         members={members}
         categories={categories}
         statuses={statuses}

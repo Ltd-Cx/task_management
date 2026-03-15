@@ -36,7 +36,7 @@ import { createCustomStatus, deleteCustomStatus, updateCustomStatus, reorderStat
 import type { TaskStatusConfig } from "@/types";
 
 interface StatusManagementProps {
-  projectId: string;
+  repositoryId: string;
   statuses: TaskStatusConfig[];
 }
 
@@ -131,7 +131,7 @@ function SortableStatusItem({
 }
 
 /** ステータス管理セクション */
-export function StatusManagement({ projectId, statuses }: StatusManagementProps) {
+export function StatusManagement({ repositoryId, statuses }: StatusManagementProps) {
   const [isPending, startTransition] = useTransition();
   const [addOpen, setAddOpen] = useState(false);
   const [editingStatus, setEditingStatus] = useState<TaskStatusConfig | null>(null);
@@ -182,7 +182,7 @@ export function StatusManagement({ projectId, statuses }: StatusManagementProps)
     // displayOrder を更新
     startTransition(async () => {
       await reorderStatuses({
-        projectId,
+        repositoryId,
         items: newOrder.map((s, index) => ({ id: s.id, displayOrder: index })),
       });
     });
@@ -192,7 +192,7 @@ export function StatusManagement({ projectId, statuses }: StatusManagementProps)
     if (!newKey || !newLabel) return;
     startTransition(async () => {
       const result = await createCustomStatus({
-        projectId,
+        repositoryId,
         key: newKey,
         label: newLabel,
         color: newColor,
@@ -211,7 +211,7 @@ export function StatusManagement({ projectId, statuses }: StatusManagementProps)
     startTransition(async () => {
       const result = await updateCustomStatus({
         id: editingStatus.id,
-        projectId,
+        repositoryId,
         label: editLabel,
         color: editColor,
         displayOrder: editingStatus.displayOrder,
@@ -225,7 +225,7 @@ export function StatusManagement({ projectId, statuses }: StatusManagementProps)
   function handleDelete(id: string) {
     if (!confirm("このステータスを削除しますか？")) return;
     startTransition(async () => {
-      await deleteCustomStatus({ id, projectId });
+      await deleteCustomStatus({ id, repositoryId });
     });
   }
 
@@ -249,7 +249,7 @@ export function StatusManagement({ projectId, statuses }: StatusManagementProps)
       <CardContent>
         <Separator className="mb-4" />
         <p className="mb-4 text-sm text-muted-foreground">
-          デフォルトステータス（未対応・処理中・処理済み・完了）に加えて、プロジェクト固有のステータスを追加できます。
+          デフォルトステータス（未対応・処理中・処理済み・完了）に加えて、リポジトリ固有のステータスを追加できます。
         </p>
 
         {localStatuses.length === 0 ? (

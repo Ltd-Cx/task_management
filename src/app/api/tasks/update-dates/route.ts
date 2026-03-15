@@ -7,7 +7,7 @@ import { tasks } from "@/db/schema";
 /** リクエストボディのバリデーションスキーマ */
 const schema = z.object({
   taskId: z.string().uuid(),
-  projectId: z.string().uuid(),
+  repositoryId: z.string().uuid(),
   startDate: z.string().nullable(),
   dueDate: z.string().nullable(),
 });

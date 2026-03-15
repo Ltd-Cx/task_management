@@ -6,20 +6,20 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { tasks } from "@/db/schema";
 import type { ActionResult } from "@/types";
-import { getProjectStatusesWithDefaults } from "@/db/queries/statuses";
+import { getRepositoryStatusesWithDefaults } from "@/db/queries/statuses";
 import { isValidStatusKey } from "@/lib/status-utils";
 import { sanitizeHtml, isHtmlEmpty } from "@/lib/sanitize";
 
 /** 課題作成のバリデーションスキーマ（ステータス以外） */
 const createTaskBaseSchema = z.object({
-  projectId: z.string().uuid("プロジェクトIDは有効なUUID形式で入力してください"),
+  repositoryId: z.string().uuid("リポジトリIDは有効なUUID形式で入力してください"),
   summary: z.string().trim().min(1, "件名は必須です").max(255, "件名は255文字以内で入力してください"),
   description: z.string().optional(),
   status: z.string().optional(),
   priority: z.enum(["high", "medium", "low"]).optional(),
   assigneeId: z.string().uuid().optional().or(z.literal("")),
   categoryId: z.string().uuid().optional().or(z.literal("")),
-  taskGroupId: z.string().uuid().optional().or(z.literal("")),
+  taskProjectId: z.string().uuid().optional().or(z.literal("")),
   progress: z.number().min(0).max(100).optional(),
   startDate: z.string().optional(),
   dueDate: z.string().optional(),
@@ -29,21 +29,21 @@ const createTaskBaseSchema = z.object({
 const updateTaskStatusBaseSchema = z.object({
   taskId: z.string().uuid(),
   status: z.string(),
-  projectId: z.string().uuid(),
+  repositoryId: z.string().uuid(),
 });
 
 /**
  * 課題を作成する
  */
 export async function createTask(data: {
-  projectId: string;
+  repositoryId: string;
   summary: string;
   description?: string;
   status?: string;
   priority?: string;
   assigneeId?: string;
   categoryId?: string;
-  taskGroupId?: string;
+  taskProjectId?: string;
   progress?: number;
   startDate?: string;
   dueDate?: string;
@@ -55,11 +55,11 @@ export async function createTask(data: {
       return { success: false, error: parsed.error.issues[0]?.message ?? "入力内容に誤りがあります" };
     }
 
-    const { projectId, assigneeId, categoryId, taskGroupId, progress, status, description, ...taskData } = parsed.data;
+    const { repositoryId, assigneeId, categoryId, taskProjectId, progress, status, description, ...taskData } = parsed.data;
 
     // 動的ステータスバリデーション
     if (status) {
-      const statuses = await getProjectStatusesWithDefaults(projectId);
+      const statuses = await getRepositoryStatusesWithDefaults(repositoryId);
       if (!isValidStatusKey(statuses, status)) {
         return { success: false, error: "無効なステータスです" };
       }
@@ -72,16 +72,16 @@ export async function createTask(data: {
       ...taskData,
       description: sanitizedDescription,
       status: status ?? "open",
-      projectId,
+      repositoryId,
       assigneeId: assigneeId || null,
       categoryId: categoryId || null,
-      taskGroupId: taskGroupId || null,
+      taskProjectId: taskProjectId || null,
       progress: progress ?? 0,
       createdBy: data.createdBy,
     });
 
-    revalidatePath(`/projects/${projectId}/tasks`);
-    revalidatePath(`/projects/${projectId}/board`);
+    revalidatePath(`/repositories/${repositoryId}/tasks`);
+    revalidatePath(`/repositories/${repositoryId}/board`);
 
     return { success: true };
   } catch (error) {
@@ -96,7 +96,7 @@ export async function createTask(data: {
 export async function updateTaskStatus(data: {
   taskId: string;
   status: string;
-  projectId: string;
+  repositoryId: string;
 }): Promise<ActionResult> {
   try {
     const parsed = updateTaskStatusBaseSchema.safeParse(data);
@@ -105,7 +105,7 @@ export async function updateTaskStatus(data: {
     }
 
     // 動的ステータスバリデーション
-    const statuses = await getProjectStatusesWithDefaults(parsed.data.projectId);
+    const statuses = await getRepositoryStatusesWithDefaults(parsed.data.repositoryId);
     if (!isValidStatusKey(statuses, parsed.data.status)) {
       return { success: false, error: "無効なステータスです" };
     }
@@ -118,8 +118,8 @@ export async function updateTaskStatus(data: {
       })
       .where(eq(tasks.id, parsed.data.taskId));
 
-    revalidatePath(`/projects/${parsed.data.projectId}/tasks`);
-    revalidatePath(`/projects/${parsed.data.projectId}/board`);
+    revalidatePath(`/repositories/${parsed.data.repositoryId}/tasks`);
+    revalidatePath(`/repositories/${parsed.data.repositoryId}/board`);
 
     return { success: true };
   } catch (error) {
@@ -133,12 +133,12 @@ export async function updateTaskStatus(data: {
  */
 export async function deleteTask(data: {
   taskId: string;
-  projectId: string;
+  repositoryId: string;
 }): Promise<ActionResult> {
   try {
     await db.delete(tasks).where(eq(tasks.id, data.taskId));
-    revalidatePath(`/projects/${data.projectId}/tasks`);
-    revalidatePath(`/projects/${data.projectId}/board`);
+    revalidatePath(`/repositories/${data.repositoryId}/tasks`);
+    revalidatePath(`/repositories/${data.repositoryId}/board`);
     return { success: true };
   } catch (error) {
     const message = error instanceof Error ? error.message : "課題の削除に失敗しました";
@@ -149,14 +149,14 @@ export async function deleteTask(data: {
 /** 課題更新のバリデーションスキーマ（ステータス以外） */
 const updateTaskBaseSchema = z.object({
   taskId: z.string().uuid(),
-  projectId: z.string().uuid(),
+  repositoryId: z.string().uuid(),
   summary: z.string().trim().min(1, "件名は必須です").max(255, "件名は255文字以内で入力してください"),
   description: z.string().optional(),
   status: z.string().optional(),
   priority: z.enum(["high", "medium", "low"]).optional(),
   assigneeId: z.string().uuid().optional().or(z.literal("")),
   categoryId: z.string().uuid().optional().or(z.literal("")),
-  taskGroupId: z.string().uuid().optional().or(z.literal("")),
+  taskProjectId: z.string().uuid().optional().or(z.literal("")),
   progress: z.number().min(0).max(100).optional(),
   statusMemo: z.string().optional(),
   startDate: z.string().optional(),
@@ -168,14 +168,14 @@ const updateTaskBaseSchema = z.object({
  */
 export async function updateTask(data: {
   taskId: string;
-  projectId: string;
+  repositoryId: string;
   summary: string;
   description?: string;
   status?: string;
   priority?: string;
   assigneeId?: string;
   categoryId?: string;
-  taskGroupId?: string;
+  taskProjectId?: string;
   progress?: number;
   statusMemo?: string;
   startDate?: string;
@@ -187,11 +187,11 @@ export async function updateTask(data: {
       return { success: false, error: parsed.error.issues[0]?.message ?? "入力内容に誤りがあります" };
     }
 
-    const { taskId, projectId, assigneeId, categoryId, taskGroupId, progress, status, description, statusMemo, ...taskData } = parsed.data;
+    const { taskId, repositoryId, assigneeId, categoryId, taskProjectId, progress, status, description, statusMemo, ...taskData } = parsed.data;
 
     // 動的ステータスバリデーション
     if (status) {
-      const statuses = await getProjectStatusesWithDefaults(projectId);
+      const statuses = await getRepositoryStatusesWithDefaults(repositoryId);
       if (!isValidStatusKey(statuses, status)) {
         return { success: false, error: "無効なステータスです" };
       }
@@ -209,7 +209,7 @@ export async function updateTask(data: {
         status: status,
         assigneeId: assigneeId || null,
         categoryId: categoryId || null,
-        taskGroupId: taskGroupId || null,
+        taskProjectId: taskProjectId || null,
         progress: progress ?? 0,
         statusMemo: sanitizedStatusMemo,
         startDate: taskData.startDate || null,
@@ -218,9 +218,9 @@ export async function updateTask(data: {
       })
       .where(eq(tasks.id, taskId));
 
-    revalidatePath(`/projects/${projectId}/tasks`);
-    revalidatePath(`/projects/${projectId}/board`);
-    revalidatePath(`/projects/${projectId}/gantt`);
+    revalidatePath(`/repositories/${repositoryId}/tasks`);
+    revalidatePath(`/repositories/${repositoryId}/board`);
+    revalidatePath(`/repositories/${repositoryId}/gantt`);
 
     return { success: true };
   } catch (error) {
@@ -232,7 +232,7 @@ export async function updateTask(data: {
 /** 課題日程更新のバリデーションスキーマ */
 const updateTaskDatesSchema = z.object({
   taskId: z.string().uuid(),
-  projectId: z.string().uuid(),
+  repositoryId: z.string().uuid(),
   startDate: z.string().nullable(),
   dueDate: z.string().nullable(),
 });
@@ -242,7 +242,7 @@ const updateTaskDatesSchema = z.object({
  */
 export async function updateTaskDates(data: {
   taskId: string;
-  projectId: string;
+  repositoryId: string;
   startDate: string | null;
   dueDate: string | null;
 }): Promise<ActionResult> {
@@ -262,7 +262,7 @@ export async function updateTaskDates(data: {
       .where(eq(tasks.id, parsed.data.taskId));
 
     // ガントパスは revalidate しない（SVAR が内部状態で更新済み、再フェッチは全体再描画を引き起こす）
-    revalidatePath(`/projects/${parsed.data.projectId}/tasks`);
+    revalidatePath(`/repositories/${parsed.data.repositoryId}/tasks`);
 
     return { success: true };
   } catch (error) {

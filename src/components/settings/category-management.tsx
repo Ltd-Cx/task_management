@@ -36,7 +36,7 @@ import { createCategory, deleteCategory, updateCategory, reorderCategories } fro
 import type { Category } from "@/types";
 
 interface CategoryManagementProps {
-  projectId: string;
+  repositoryId: string;
   categories: Category[];
 }
 
@@ -112,7 +112,7 @@ function SortableCategoryItem({
 }
 
 /** カテゴリー管理セクション */
-export function CategoryManagement({ projectId, categories: initialCategories }: CategoryManagementProps) {
+export function CategoryManagement({ repositoryId, categories: initialCategories }: CategoryManagementProps) {
   const [isPending, startTransition] = useTransition();
   const [addOpen, setAddOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -162,7 +162,7 @@ export function CategoryManagement({ projectId, categories: initialCategories }:
     // displayOrder を更新
     startTransition(async () => {
       await reorderCategories({
-        projectId,
+        repositoryId,
         items: newOrder.map((c, index) => ({ id: c.id, displayOrder: index })),
       });
     });
@@ -172,7 +172,7 @@ export function CategoryManagement({ projectId, categories: initialCategories }:
     if (!newName) return;
     startTransition(async () => {
       const result = await createCategory({
-        projectId,
+        repositoryId,
         name: newName,
         color: newColor,
       });
@@ -189,7 +189,7 @@ export function CategoryManagement({ projectId, categories: initialCategories }:
     startTransition(async () => {
       const result = await updateCategory({
         id: editingCategory.id,
-        projectId,
+        repositoryId,
         name: editName,
         color: editColor,
       });
@@ -202,7 +202,7 @@ export function CategoryManagement({ projectId, categories: initialCategories }:
   function handleDelete(id: string) {
     if (!confirm("このカテゴリーを削除しますか？")) return;
     startTransition(async () => {
-      await deleteCategory({ id, projectId });
+      await deleteCategory({ id, repositoryId });
     });
   }
 

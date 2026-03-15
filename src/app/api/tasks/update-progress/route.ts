@@ -6,11 +6,11 @@ import { tasks } from "@/db/schema";
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { taskId, projectId, progress } = body;
+    const { taskId, repositoryId, progress } = body;
 
-    if (!taskId || projectId === undefined || progress === undefined) {
+    if (!taskId || repositoryId === undefined || progress === undefined) {
       return NextResponse.json(
-        { success: false, error: "taskId, projectId, progress are required" },
+        { success: false, error: "taskId, repositoryId, progress are required" },
         { status: 400 }
       );
     }

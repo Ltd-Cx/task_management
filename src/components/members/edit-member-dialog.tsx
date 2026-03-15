@@ -23,11 +23,11 @@ import {
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { updateMember, removeMember } from "@/actions/member-actions";
 import { USER_ROLE_CONFIG } from "@/lib/constants";
-import type { ProjectMemberWithUser, UserRole } from "@/types";
+import type { RepositoryMemberWithUser, UserRole } from "@/types";
 
 interface EditMemberDialogProps {
-  member: ProjectMemberWithUser;
-  projectId: string;
+  member: RepositoryMemberWithUser;
+  repositoryId: string;
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -35,7 +35,7 @@ interface EditMemberDialogProps {
 /** メンバー編集ダイアログ */
 export function EditMemberDialog({
   member,
-  projectId,
+  repositoryId,
   open,
   onOpenChange,
 }: EditMemberDialogProps) {
@@ -45,7 +45,7 @@ export function EditMemberDialog({
   const handleSave = () => {
     startTransition(async () => {
       const result = await updateMember({
-        projectId,
+        repositoryId,
         userId: member.userId,
         role,
       });
@@ -60,13 +60,13 @@ export function EditMemberDialog({
   };
 
   const handleRemove = () => {
-    if (!confirm(`${member.user.displayName} をプロジェクトから削除しますか？`)) {
+    if (!confirm(`${member.user.displayName} をリポジトリから削除しますか？`)) {
       return;
     }
 
     startTransition(async () => {
       const result = await removeMember({
-        projectId,
+        repositoryId,
         userId: member.userId,
       });
 

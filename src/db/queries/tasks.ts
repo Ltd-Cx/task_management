@@ -2,12 +2,12 @@ import { eq, desc } from "drizzle-orm";
 import { db } from "@/db";
 import { tasks } from "@/db/schema";
 import type { DynamicTasksByStatus } from "@/types";
-import { getProjectStatusesWithDefaults } from "./statuses";
+import { getRepositoryStatusesWithDefaults } from "./statuses";
 
 /** 課題一覧（リレーション含む）を取得 */
-export async function getTasksWithRelations(projectId: string) {
+export async function getTasksWithRelations(repositoryId: string) {
   return db.query.tasks.findMany({
-    where: eq(tasks.projectId, projectId),
+    where: eq(tasks.repositoryId, repositoryId),
     with: {
       assignee: true,
       category: true,
@@ -18,11 +18,11 @@ export async function getTasksWithRelations(projectId: string) {
 
 /** ステータス別課題を取得（ボード用） - 動的ステータス対応 */
 export async function getTasksByStatus(
-  projectId: string
+  repositoryId: string
 ): Promise<DynamicTasksByStatus> {
   const [allTasks, statuses] = await Promise.all([
-    getTasksWithRelations(projectId),
-    getProjectStatusesWithDefaults(projectId),
+    getTasksWithRelations(repositoryId),
+    getRepositoryStatusesWithDefaults(repositoryId),
   ]);
 
   return Object.fromEntries(
@@ -34,9 +34,9 @@ export async function getTasksByStatus(
 }
 
 /** 日付付き課題を取得（ガント用） */
-export async function getTasksWithDates(projectId: string) {
+export async function getTasksWithDates(repositoryId: string) {
   return db.query.tasks.findMany({
-    where: eq(tasks.projectId, projectId),
+    where: eq(tasks.repositoryId, repositoryId),
     with: {
       assignee: true,
       category: true,

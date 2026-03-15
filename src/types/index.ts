@@ -3,19 +3,19 @@ import type {
   tasks,
   users,
   categories,
-  projects,
-  projectMembers,
+  repositories,
+  repositoryMembers,
   taskStatuses,
-  taskGroups,
+  taskProjects,
 } from "@/db/schema";
 
 // --- Drizzle スキーマから推論される基本型 ---
 export type Task = InferSelectModel<typeof tasks>;
 export type User = InferSelectModel<typeof users>;
 export type Category = InferSelectModel<typeof categories>;
-export type Project = InferSelectModel<typeof projects>;
-export type ProjectMember = InferSelectModel<typeof projectMembers>;
-export type TaskGroup = InferSelectModel<typeof taskGroups>;
+export type Repository = InferSelectModel<typeof repositories>;
+export type RepositoryMember = InferSelectModel<typeof repositoryMembers>;
+export type TaskProject = InferSelectModel<typeof taskProjects>;
 
 // --- ステータス・優先度のリテラル型 ---
 export type TaskStatus = Task["status"];
@@ -26,10 +26,10 @@ export type UserRole = User["role"];
 export type TaskWithRelations = Task & {
   assignee: User | null;
   category: Category | null;
-  taskGroup?: TaskGroup | null;
+  taskProject?: TaskProject | null;
 };
 
-export type ProjectMemberWithUser = ProjectMember & {
+export type RepositoryMemberWithUser = RepositoryMember & {
   user: User;
 };
 

@@ -24,12 +24,12 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { createTaskGroupAction, deleteTaskGroupAction } from "@/actions/task-group-actions";
-import type { TaskGroup } from "@/types";
+import { createTaskProjectAction, deleteTaskProjectAction } from "@/actions/task-group-actions";
+import type { TaskProject } from "@/types";
 import { cn } from "@/lib/utils";
 
-/** グループ（課題数付き） */
-export interface TaskGroupWithCount extends TaskGroup {
+/** プロジェクト（課題数付き） */
+export interface TaskGroupWithCount extends TaskProject {
   taskCount: number;
 }
 
@@ -55,15 +55,15 @@ const addTaskGroupFormSchema = z.object({
 type AddTaskGroupFormValues = z.infer<typeof addTaskGroupFormSchema>;
 
 interface AddTaskGroupDialogProps {
-  projectId: string;
+  repositoryId: string;
   existingGroups?: TaskGroupWithCount[];
-  onSuccess?: (newGroup: TaskGroup) => void;
+  onSuccess?: (newGroup: TaskProject) => void;
   onDelete?: (groupId: string) => void;
   buttonLabel?: string;
 }
 
-/** タスクグループ追加ダイアログ */
-export function AddTaskGroupDialog({ projectId, existingGroups = [], onSuccess, onDelete, buttonLabel = "管理" }: AddTaskGroupDialogProps) {
+/** タスクプロジェクト追加ダイアログ */
+export function AddTaskGroupDialog({ repositoryId, existingGroups = [], onSuccess, onDelete, buttonLabel = "管理" }: AddTaskGroupDialogProps) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [deletingGroupId, setDeletingGroupId] = useState<string | null>(null);
@@ -79,8 +79,8 @@ export function AddTaskGroupDialog({ projectId, existingGroups = [], onSuccess, 
 
   function onSubmit(values: AddTaskGroupFormValues) {
     startTransition(async () => {
-      const result = await createTaskGroupAction({
-        projectId,
+      const result = await createTaskProjectAction({
+        repositoryId,
         name: values.name,
         color: values.color,
       });
@@ -99,14 +99,14 @@ export function AddTaskGroupDialog({ projectId, existingGroups = [], onSuccess, 
   /** プロジェクトを削除 */
   const handleDeleteGroup = (groupId: string, groupName: string, taskCount: number) => {
     const message = taskCount > 0
-      ? `「${groupName}」を削除しますか？\n紐づいている${taskCount}件のタスクは「グループなし」になります。`
+      ? `「${groupName}」を削除しますか？\n紐づいている${taskCount}件のタスクは「プロジェクトなし」になります。`
       : `「${groupName}」を削除しますか？`;
 
     if (!confirm(message)) return;
 
     setDeletingGroupId(groupId);
     startTransition(async () => {
-      const result = await deleteTaskGroupAction({ groupId, projectId });
+      const result = await deleteTaskProjectAction({ projectId: groupId, repositoryId });
       setDeletingGroupId(null);
 
       if (result.success) {

@@ -27,8 +27,8 @@ import { Loader2 } from "lucide-react";
 interface GanttChartProps {
   tasks: TaskWithRelations[];
   taskGroups: TaskGroupWithCount[];
-  projectKey: string;
-  projectId: string;
+  repositoryKey: string;
+  repositoryId: string;
   onTaskClick?: (taskId: string) => void;
   onTaskUpdate?: (taskId: string, startDate: string, dueDate: string) => void;
   onProgressUpdate?: (taskId: string, progress: number) => void;
@@ -80,8 +80,8 @@ function getInitialDates(tasks: TaskWithRelations[]) {
 export function GanttChart({
   tasks,
   taskGroups,
-  projectKey,
-  projectId,
+  repositoryKey,
+  repositoryId,
   onTaskClick,
   onTaskUpdate,
   onProgressUpdate,
@@ -130,7 +130,7 @@ export function GanttChart({
     const groups: Record<string, GanttTask[]> = {};
 
     ganttTasks.forEach((task) => {
-      const key = task.taskGroupId ?? "none";
+      const key = task.taskProjectId ?? "none";
       if (!groups[key]) {
         groups[key] = [];
       }

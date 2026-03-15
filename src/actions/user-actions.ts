@@ -4,7 +4,7 @@ import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
-import { users, projectMembers } from "@/db/schema";
+import { users, repositoryMembers } from "@/db/schema";
 import type { ActionResult } from "@/types";
 
 const createUserSchema = z.object({
@@ -25,7 +25,7 @@ export async function createUser(data: {
   email: string;
   role?: "admin" | "member";
   avatarUrl?: string;
-  projectId?: string;
+  repositoryId?: string;
 }): Promise<ActionResult<{ userId: string }>> {
   try {
     const parsed = createUserSchema.safeParse(data);
@@ -50,14 +50,14 @@ export async function createUser(data: {
       avatarUrl: parsed.data.avatarUrl || null,
     }).returning({ id: users.id });
 
-    // プロジェクトIDが指定されていれば、そのプロジェクトにもメンバーとして追加
-    if (data.projectId && newUser) {
-      await db.insert(projectMembers).values({
-        projectId: data.projectId,
+    // リポジトリIDが指定されていれば、そのリポジトリにもメンバーとして追加
+    if (data.repositoryId && newUser) {
+      await db.insert(repositoryMembers).values({
+        repositoryId: data.repositoryId,
         userId: newUser.id,
         role: parsed.data.role ?? "member",
       });
-      revalidatePath(`/projects/${data.projectId}/members`);
+      revalidatePath(`/repositories/${data.repositoryId}/members`);
     }
 
     return { success: true, data: { userId: newUser.id } };
@@ -83,8 +83,8 @@ export async function updateUserAvatar(data: {
       .set({ avatarUrl: parsed.data.avatarUrl || null })
       .where(eq(users.id, parsed.data.userId));
 
-    // 全プロジェクトページをrevalidate（サイドバーに影響するため）
-    revalidatePath("/projects", "layout");
+    // 全リポジトリページをrevalidate（サイドバーに影響するため）
+    revalidatePath("/repositories", "layout");
 
     return { success: true };
   } catch (error) {

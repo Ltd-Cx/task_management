@@ -3,11 +3,11 @@
 import { memo } from "react";
 import { ChevronDown, ChevronRight } from "lucide-react";
 import { GANTT_CONSTANTS } from "./types";
-import type { TaskGroup } from "@/types";
+import type { TaskProject } from "@/types";
 import { cn } from "@/lib/utils";
 
 interface GanttGroupHeaderProps {
-  group: TaskGroup | null;
+  group: TaskProject | null;
   taskCount: number;
   isCollapsed: boolean;
   onToggle: () => void;

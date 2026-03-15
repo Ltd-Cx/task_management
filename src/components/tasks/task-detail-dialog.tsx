@@ -45,15 +45,15 @@ import { AddCategoryInlineDialog } from "@/components/tasks/add-category-inline-
 import { TASK_PRIORITY_CONFIG } from "@/lib/constants";
 import { updateTask } from "@/actions/task-actions";
 import { formatDate } from "@/lib/date";
-import type { TaskWithRelations, ProjectMemberWithUser, Category, TaskPriority, TaskStatusConfig, TaskGroup } from "@/types";
+import type { TaskWithRelations, RepositoryMemberWithUser, Category, TaskPriority, TaskStatusConfig, TaskProject } from "@/types";
 
 type DialogMode = "detail" | "edit";
 
 interface TaskDetailDialogProps {
   task: TaskWithRelations;
-  projectKey: string;
-  projectId: string;
-  members: ProjectMemberWithUser[];
+  repositoryKey: string;
+  repositoryId: string;
+  members: RepositoryMemberWithUser[];
   categories: Category[];
   statuses: TaskStatusConfig[];
   taskGroups: TaskGroupWithCount[];
@@ -64,8 +64,8 @@ interface TaskDetailDialogProps {
 /** タスク詳細/編集ダイアログ */
 export function TaskDetailDialog({
   task,
-  projectKey,
-  projectId,
+  repositoryKey,
+  repositoryId,
   members: initialMembers,
   categories,
   statuses,
@@ -76,11 +76,11 @@ export function TaskDetailDialog({
   const [mode, setMode] = useState<DialogMode>("detail");
   const [isPending, startTransition] = useTransition();
   const [localTaskGroups, setLocalTaskGroups] = useState<TaskGroupWithCount[]>(initialTaskGroups);
-  const [localMembers, setLocalMembers] = useState<ProjectMemberWithUser[]>(initialMembers);
+  const [localMembers, setLocalMembers] = useState<RepositoryMemberWithUser[]>(initialMembers);
   const [localCategories, setLocalCategories] = useState<Category[]>(categories);
 
   const statusConfig = statuses.find((s) => s.key === task.status);
-  const taskGroup = localTaskGroups.find((g) => g.id === task.taskGroupId);
+  const taskGroup = localTaskGroups.find((g) => g.id === task.taskProjectId);
 
   // ダイアログが閉じたらモードをリセット
   useEffect(() => {
@@ -90,13 +90,13 @@ export function TaskDetailDialog({
   }, [open]);
 
   /** 新しいグループが追加された時のハンドラ */
-  const handleTaskGroupAdded = useCallback((newGroup: TaskGroup) => {
+  const handleTaskGroupAdded = useCallback((newGroup: TaskProject) => {
     const groupWithCount: TaskGroupWithCount = { ...newGroup, taskCount: 0 };
     setLocalTaskGroups((prev) => [...prev, groupWithCount]);
   }, []);
 
   /** 新しいメンバーが追加された時のハンドラ */
-  const handleMemberAdded = useCallback((newMember: ProjectMemberWithUser) => {
+  const handleMemberAdded = useCallback((newMember: RepositoryMemberWithUser) => {
     setLocalMembers((prev) => [...prev, newMember]);
   }, []);
 
@@ -148,7 +148,7 @@ export function TaskDetailDialog({
       priority: task.priority,
       assigneeId: task.assigneeId ?? "",
       categoryId: task.categoryId ?? "",
-      taskGroupId: task.taskGroupId ?? "",
+      taskGroupId: task.taskProjectId ?? "",
       progress: task.progress ?? 0,
       statusMemo: task.statusMemo ?? "",
       startDate: task.startDate ?? "",
@@ -165,7 +165,7 @@ export function TaskDetailDialog({
       priority: task.priority,
       assigneeId: task.assigneeId ?? "",
       categoryId: task.categoryId ?? "",
-      taskGroupId: task.taskGroupId ?? "",
+      taskGroupId: task.taskProjectId ?? "",
       progress: task.progress ?? 0,
       statusMemo: task.statusMemo ?? "",
       startDate: task.startDate ?? "",
@@ -177,14 +177,14 @@ export function TaskDetailDialog({
     startTransition(async () => {
       const result = await updateTask({
         taskId: task.id,
-        projectId,
+        repositoryId,
         summary: values.summary,
         description: values.description,
         status: values.status,
         priority: values.priority,
         assigneeId: values.assigneeId || undefined,
         categoryId: values.categoryId || undefined,
-        taskGroupId: values.taskGroupId === "__none__" ? undefined : values.taskGroupId || undefined,
+        taskProjectId: values.taskGroupId === "__none__" ? undefined : values.taskGroupId || undefined,
         progress: values.progress,
         statusMemo: values.statusMemo || undefined,
         startDate: values.startDate || undefined,
@@ -389,7 +389,7 @@ export function TaskDetailDialog({
                             </SelectContent>
                           </Select>
                           <AddTaskGroupDialog
-                            projectId={projectId}
+                            repositoryId={repositoryId}
                             existingGroups={localTaskGroups}
                             onSuccess={handleTaskGroupAdded}
                           />
@@ -514,7 +514,7 @@ export function TaskDetailDialog({
                             </SelectContent>
                           </Select>
                           <AddMemberInlineDialog
-                            projectId={projectId}
+                            repositoryId={repositoryId}
                             existingMembers={localMembers}
                             onSuccess={handleMemberAdded}
                           />
@@ -553,7 +553,7 @@ export function TaskDetailDialog({
                             </SelectContent>
                           </Select>
                           <AddCategoryInlineDialog
-                            projectId={projectId}
+                            repositoryId={repositoryId}
                             existingCategories={localCategories}
                             onSuccess={handleCategoryAdded}
                           />

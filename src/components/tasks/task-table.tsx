@@ -30,7 +30,7 @@ import { AddMemberInlineDialog } from "@/components/tasks/add-member-inline-dial
 import { AddCategoryInlineDialog } from "@/components/tasks/add-category-inline-dialog";
 import { TASK_PRIORITY_CONFIG } from "@/lib/constants";
 import { formatDate } from "@/lib/date";
-import type { TaskWithRelations, ProjectMemberWithUser, Category, TaskStatusConfig, TaskPriority } from "@/types";
+import type { TaskWithRelations, RepositoryMemberWithUser, Category, TaskStatusConfig, TaskPriority } from "@/types";
 
 interface TaskFilters {
   taskGroupId: string;
@@ -42,16 +42,16 @@ interface TaskFilters {
 
 interface TaskTableProps {
   tasks: TaskWithRelations[];
-  projectKey: string;
-  projectId: string;
-  members: ProjectMemberWithUser[];
+  repositoryKey: string;
+  repositoryId: string;
+  members: RepositoryMemberWithUser[];
   categories: Category[];
   statuses: TaskStatusConfig[];
   taskGroups: TaskGroupWithCount[];
 }
 
 /** 課題一覧テーブル */
-export function TaskTable({ tasks, projectKey, projectId, members, categories, statuses, taskGroups }: TaskTableProps) {
+export function TaskTable({ tasks, repositoryKey, repositoryId, members, categories, statuses, taskGroups }: TaskTableProps) {
   const getStatusConfig = (key: string) => statuses.find((s) => s.key === key);
   const [selectedTask, setSelectedTask] = useState<TaskWithRelations | null>(null);
   const [filters, setFilters] = useState<TaskFilters>({
@@ -98,8 +98,8 @@ export function TaskTable({ tasks, projectKey, projectId, members, categories, s
       // グループフィルター
       if (filters.taskGroupId) {
         if (filters.taskGroupId === "__none__") {
-          if (task.taskGroupId) return false;
-        } else if (task.taskGroupId !== filters.taskGroupId) {
+          if (task.taskProjectId) return false;
+        } else if (task.taskProjectId !== filters.taskGroupId) {
           return false;
         }
       }
@@ -276,22 +276,22 @@ export function TaskTable({ tasks, projectKey, projectId, members, categories, s
       {/* 追加セクション */}
       <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-4">
         <AddTaskGroupDialog
-          projectId={projectId}
+          repositoryId={repositoryId}
           existingGroups={taskGroups}
           buttonLabel="プロジェクト追加"
         />
         <AddMemberInlineDialog
-          projectId={projectId}
+          repositoryId={repositoryId}
           existingMembers={members}
           buttonLabel="担当者追加"
         />
         <AddCategoryInlineDialog
-          projectId={projectId}
+          repositoryId={repositoryId}
           existingCategories={categories}
           buttonLabel="カテゴリー追加"
         />
         <AddTaskDialog
-          projectId={projectId}
+          repositoryId={repositoryId}
           members={members}
           categories={categories}
           statuses={statuses}
@@ -333,7 +333,7 @@ export function TaskTable({ tasks, projectKey, projectId, members, categories, s
               onClick={() => setSelectedTask(task)}
             >
               <TableCell className="font-mono text-[13px] font-medium text-muted-foreground">
-                {projectKey}-{task.keyId}
+                {repositoryKey}-{task.keyId}
               </TableCell>
               <TableCell className="text-[13px]">{task.summary}</TableCell>
               <TableCell>
@@ -375,8 +375,8 @@ export function TaskTable({ tasks, projectKey, projectId, members, categories, s
       {selectedTask && (
         <TaskDetailDialog
           task={selectedTask}
-          projectKey={projectKey}
-          projectId={projectId}
+          repositoryKey={repositoryKey}
+          repositoryId={repositoryId}
           members={members}
           categories={categories}
           statuses={statuses}

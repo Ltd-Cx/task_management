@@ -10,11 +10,11 @@ interface BoardColumnProps {
   status: string;
   statusConfig: TaskStatusConfig;
   tasks: TaskWithRelations[];
-  projectKey: string;
+  repositoryKey: string;
 }
 
 /** ボードカラム（ステータス別列） */
-export function BoardColumn({ status, statusConfig, tasks, projectKey }: BoardColumnProps) {
+export function BoardColumn({ status, statusConfig, tasks, repositoryKey }: BoardColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: status });
 
   return (
@@ -46,7 +46,7 @@ export function BoardColumn({ status, statusConfig, tasks, projectKey }: BoardCo
             </div>
           ) : (
             tasks.map((task) => (
-              <BoardCard key={task.id} task={task} projectKey={projectKey} />
+              <BoardCard key={task.id} task={task} repositoryKey={repositoryKey} />
             ))
           )}
         </div>

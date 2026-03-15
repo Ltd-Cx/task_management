@@ -50,7 +50,7 @@ const addCategoryFormSchema = z.object({
 type AddCategoryFormValues = z.infer<typeof addCategoryFormSchema>;
 
 interface AddCategoryInlineDialogProps {
-  projectId: string;
+  repositoryId: string;
   existingCategories?: Category[];
   onSuccess?: (newCategory: Category) => void;
   buttonLabel?: string;
@@ -58,7 +58,7 @@ interface AddCategoryInlineDialogProps {
 
 /** カテゴリー追加ダイアログ（タスクダイアログ内で使用） */
 export function AddCategoryInlineDialog({
-  projectId,
+  repositoryId,
   existingCategories = [],
   onSuccess,
   buttonLabel = "管理",
@@ -78,7 +78,7 @@ export function AddCategoryInlineDialog({
   function onSubmit(values: AddCategoryFormValues) {
     startTransition(async () => {
       const result = await createCategory({
-        projectId,
+        repositoryId,
         name: values.name,
         color: values.color,
       });

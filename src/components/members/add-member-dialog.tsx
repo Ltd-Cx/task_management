@@ -48,12 +48,12 @@ const addMemberFormSchema = z.object({
 type AddMemberFormValues = z.infer<typeof addMemberFormSchema>;
 
 interface AddMemberDialogProps {
-  projectId: string;
+  repositoryId: string;
   availableUsers: User[];
 }
 
 /** メンバー追加ダイアログ */
-export function AddMemberDialog({ projectId, availableUsers }: AddMemberDialogProps) {
+export function AddMemberDialog({ repositoryId, availableUsers }: AddMemberDialogProps) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -69,7 +69,7 @@ export function AddMemberDialog({ projectId, availableUsers }: AddMemberDialogPr
   function onSubmit(values: AddMemberFormValues) {
     startTransition(async () => {
       const result = await addMember({
-        projectId,
+        repositoryId,
         userId: values.userId,
         role: values.role,
       });
@@ -99,7 +99,7 @@ export function AddMemberDialog({ projectId, availableUsers }: AddMemberDialogPr
         <DialogHeader>
           <DialogTitle>メンバーの追加</DialogTitle>
           <p className="text-sm text-muted-foreground">
-            プロジェクトに新しいメンバーを追加します。
+            リポジトリに新しいメンバーを追加します。
           </p>
         </DialogHeader>
 
@@ -187,7 +187,7 @@ export function AddMemberDialog({ projectId, availableUsers }: AddMemberDialogPr
           <div className="py-6 text-center text-muted-foreground">
             <p>追加可能なユーザーがいません。</p>
             <p className="text-sm mt-2">
-              すべてのユーザーが既にプロジェクトに参加しています。
+              すべてのユーザーが既にリポジトリに参加しています。
             </p>
             <DialogFooter className="mt-6">
               <DialogClose asChild>

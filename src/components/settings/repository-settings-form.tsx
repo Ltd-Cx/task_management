@@ -19,8 +19,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
-import { updateProject } from "@/actions/project-actions";
-import type { Project } from "@/types";
+import { updateRepository } from "@/actions/project-actions";
+import type { Repository } from "@/types";
 import { Save } from "lucide-react";
 
 const settingsFormSchema = z.object({
@@ -30,26 +30,26 @@ const settingsFormSchema = z.object({
 
 type SettingsFormValues = z.infer<typeof settingsFormSchema>;
 
-interface ProjectSettingsFormProps {
-  project: Project;
+interface RepositorySettingsFormProps {
+  repository: Repository;
 }
 
 /** リポジトリ設定フォーム */
-export function ProjectSettingsForm({ project }: ProjectSettingsFormProps) {
+export function RepositorySettingsForm({ repository }: RepositorySettingsFormProps) {
   const [isPending, startTransition] = useTransition();
 
   const form = useForm<SettingsFormValues>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Zod v4 compat層と@hookform/resolversの型不整合を回避
     resolver: zodResolver(settingsFormSchema as any),
     defaultValues: {
-      name: project.name,
-      description: project.description ?? "",
+      name: repository.name,
+      description: repository.description ?? "",
     },
   });
 
   function onSubmit(values: SettingsFormValues) {
     startTransition(async () => {
-      const result = await updateProject(project.id, {
+      const result = await updateRepository(repository.id, {
         name: values.name,
         description: values.description,
       });
@@ -88,7 +88,7 @@ export function ProjectSettingsForm({ project }: ProjectSettingsFormProps) {
 
             <FormItem>
               <FormLabel>リポジトリキー</FormLabel>
-              <Input value={project.key} disabled />
+              <Input value={repository.key} disabled />
               <FormDescription>
                 リポジトリキーは変更できません
               </FormDescription>

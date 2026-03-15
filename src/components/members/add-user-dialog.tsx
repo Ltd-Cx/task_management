@@ -49,11 +49,11 @@ const addUserFormSchema = z.object({
 type AddUserFormValues = z.infer<typeof addUserFormSchema>;
 
 interface AddUserDialogProps {
-  projectId: string;
+  repositoryId: string;
 }
 
 /** ユーザー追加ダイアログ */
-export function AddUserDialog({ projectId }: AddUserDialogProps) {
+export function AddUserDialog({ repositoryId }: AddUserDialogProps) {
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
 
@@ -73,7 +73,7 @@ export function AddUserDialog({ projectId }: AddUserDialogProps) {
         displayName: values.displayName,
         email: values.email,
         role: values.role,
-        projectId, // プロジェクトにも自動追加
+        repositoryId, // リポジトリにも自動追加
       });
 
       if (result.success) {
@@ -99,7 +99,7 @@ export function AddUserDialog({ projectId }: AddUserDialogProps) {
         <DialogHeader>
           <DialogTitle>ユーザーの追加</DialogTitle>
           <p className="text-sm text-muted-foreground">
-            新しいユーザーを作成し、プロジェクトに追加します。
+            新しいユーザーを作成し、リポジトリに追加します。
           </p>
         </DialogHeader>
 

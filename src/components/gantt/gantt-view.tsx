@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import type {
   TaskWithRelations,
-  ProjectMemberWithUser,
+  RepositoryMemberWithUser,
   Category,
   TaskStatusConfig,
 } from "@/types";
@@ -30,9 +30,9 @@ const GanttChart = dynamic(
 interface GanttViewProps {
   tasks: TaskWithRelations[];
   taskGroups: TaskGroupWithCount[];
-  projectKey: string;
-  projectId: string;
-  members: ProjectMemberWithUser[];
+  repositoryKey: string;
+  repositoryId: string;
+  members: RepositoryMemberWithUser[];
   categories: Category[];
   statuses: TaskStatusConfig[];
 }
@@ -41,8 +41,8 @@ interface GanttViewProps {
 export function GanttView({
   tasks,
   taskGroups,
-  projectKey,
-  projectId,
+  repositoryKey,
+  repositoryId,
   members,
   categories,
   statuses,
@@ -74,7 +74,7 @@ export function GanttView({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             taskId,
-            projectId,
+            repositoryId,
             startDate,
             dueDate,
           }),
@@ -90,7 +90,7 @@ export function GanttView({
         console.error("日付更新エラー:", error);
       }
     },
-    [projectId, router]
+    [repositoryId, router]
   );
 
   /** 進捗更新ハンドラ */
@@ -102,7 +102,7 @@ export function GanttView({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             taskId,
-            projectId,
+            repositoryId,
             progress,
           }),
         });
@@ -117,7 +117,7 @@ export function GanttView({
         console.error("進捗更新エラー:", error);
       }
     },
-    [projectId, router]
+    [repositoryId, router]
   );
 
   /** タスク更新成功時のハンドラ */
@@ -132,8 +132,8 @@ export function GanttView({
         <GanttChart
           tasks={tasks}
           taskGroups={taskGroups}
-          projectKey={projectKey}
-          projectId={projectId}
+          repositoryKey={repositoryKey}
+          repositoryId={repositoryId}
           onTaskClick={handleTaskClick}
           onTaskUpdate={handleTaskUpdate}
           onProgressUpdate={handleProgressUpdate}
@@ -144,8 +144,8 @@ export function GanttView({
       {selectedTask && (
         <TaskDetailDialog
           task={selectedTask}
-          projectKey={projectKey}
-          projectId={projectId}
+          repositoryKey={repositoryKey}
+          repositoryId={repositoryId}
           members={members}
           categories={categories}
           statuses={statuses}

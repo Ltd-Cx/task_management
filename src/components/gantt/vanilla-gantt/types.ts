@@ -1,4 +1,4 @@
-import type { TaskWithRelations, TaskGroup } from "@/types";
+import type { TaskWithRelations, TaskProject } from "@/types";
 
 /** ガントチャートの定数 */
 export const GANTT_CONSTANTS = {
@@ -12,8 +12,8 @@ export const GANTT_CONSTANTS = {
   RESIZE_HANDLE_WIDTH: 10,  // リサイズハンドルの幅
 } as const;
 
-/** タスクグループ（課題数付き） */
-export interface TaskGroupWithCount extends TaskGroup {
+/** タスクプロジェクト（課題数付き） */
+export interface TaskGroupWithCount extends TaskProject {
   taskCount: number;
 }
 
@@ -25,7 +25,7 @@ export interface GanttTask extends TaskWithRelations {
 
 /** グループ化されたタスク */
 export interface GanttTaskGroup {
-  group: TaskGroup | null;
+  group: TaskProject | null;
   tasks: GanttTask[];
   isCollapsed: boolean;
 }
@@ -53,8 +53,8 @@ export interface DragState {
 export interface GanttChartProps {
   tasks: TaskWithRelations[];
   taskGroups: TaskGroupWithCount[];
-  projectKey: string;
-  projectId: string;
+  repositoryKey: string;
+  repositoryId: string;
   viewStartDate: Date;
   viewEndDate: Date;
   onTaskClick?: (taskId: string) => void;

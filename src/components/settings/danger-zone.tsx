@@ -4,23 +4,23 @@ import { useTransition } from "react";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { deleteProject } from "@/actions/project-actions";
+import { deleteRepository } from "@/actions/project-actions";
 
 interface DangerZoneProps {
-  projectId: string;
-  projectName: string;
+  repositoryId: string;
+  repositoryName: string;
 }
 
-/** プロジェクト削除セクション */
-export function DangerZone({ projectId, projectName }: DangerZoneProps) {
+/** リポジトリ削除セクション */
+export function DangerZone({ repositoryId, repositoryName }: DangerZoneProps) {
   const [isPending, startTransition] = useTransition();
 
   function handleDelete() {
-    if (!confirm(`「${projectName}」を本当に削除しますか？\nこの操作は元に戻すことができません。`)) {
+    if (!confirm(`「${repositoryName}」を本当に削除しますか？\nこの操作は元に戻すことができません。`)) {
       return;
     }
     startTransition(async () => {
-      await deleteProject(projectId);
+      await deleteRepository(repositoryId);
     });
   }
 
@@ -30,7 +30,7 @@ export function DangerZone({ projectId, projectName }: DangerZoneProps) {
         <CardTitle className="text-destructive">危険な操作</CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
-        <p className="text-sm font-semibold">プロジェクトを削除する</p>
+        <p className="text-sm font-semibold">リポジトリを削除する</p>
         <p className="text-[13px] text-muted-foreground">
           この操作は元に戻すことができません。すべてのデータが削除されます。
         </p>

@@ -1,12 +1,12 @@
 import { redirect } from "next/navigation";
-import { getFirstProject } from "@/db/queries/projects";
+import { getFirstRepository } from "@/db/queries/projects";
 
-/** ルートページ: 最初のプロジェクトの課題一覧にリダイレクト */
+/** ルートページ: 最初のリポジトリの課題一覧にリダイレクト */
 export default async function Home() {
-  const project = await getFirstProject();
+  const repository = await getFirstRepository();
 
-  if (project) {
-    redirect(`/projects/${project.id}/tasks`);
+  if (repository) {
+    redirect(`/repositories/${repository.id}/tasks`);
   }
 
   return (
@@ -14,11 +14,9 @@ export default async function Home() {
       <div className="text-center">
         <h1 className="text-2xl font-bold">Backlog Clone</h1>
         <p className="mt-2 text-muted-foreground">
-          プロジェクトがまだありません
+          リポジトリがまだありません
         </p>
       </div>
     </div>
   );
 }
-
-

@@ -26,7 +26,7 @@ import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { createUser } from "@/actions/user-actions";
-import type { ProjectMemberWithUser } from "@/types";
+import type { RepositoryMemberWithUser } from "@/types";
 
 const addUserFormSchema = z.object({
   displayName: z.string().min(1, "表示名は必須です"),
@@ -36,15 +36,15 @@ const addUserFormSchema = z.object({
 type AddUserFormValues = z.infer<typeof addUserFormSchema>;
 
 interface AddMemberInlineDialogProps {
-  projectId: string;
-  existingMembers?: ProjectMemberWithUser[];
-  onSuccess?: (newMember: ProjectMemberWithUser) => void;
+  repositoryId: string;
+  existingMembers?: RepositoryMemberWithUser[];
+  onSuccess?: (newMember: RepositoryMemberWithUser) => void;
   buttonLabel?: string;
 }
 
 /** 担当者追加ダイアログ（タスクダイアログ内で使用） */
 export function AddMemberInlineDialog({
-  projectId,
+  repositoryId,
   existingMembers = [],
   onSuccess,
   buttonLabel = "管理",
@@ -67,7 +67,7 @@ export function AddMemberInlineDialog({
         displayName: values.displayName,
         email: values.email,
         role: "member",
-        projectId,
+        repositoryId,
       });
 
       if (result.success && result.data) {
@@ -75,8 +75,8 @@ export function AddMemberInlineDialog({
         setOpen(false);
         toast.success("担当者を追加しました");
         // 新しいメンバー情報を構築してコールバック
-        const newMember: ProjectMemberWithUser = {
-          projectId,
+        const newMember: RepositoryMemberWithUser = {
+          repositoryId,
           userId: result.data.userId,
           role: "member",
           joinedAt: new Date(),

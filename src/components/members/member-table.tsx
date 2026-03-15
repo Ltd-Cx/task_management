@@ -13,16 +13,16 @@ import {
 import { UserAvatar } from "@/components/shared/user-avatar";
 import { EditMemberDialog } from "@/components/members/edit-member-dialog";
 import { USER_ROLE_CONFIG } from "@/lib/constants";
-import type { ProjectMemberWithUser } from "@/types";
+import type { RepositoryMemberWithUser } from "@/types";
 
 interface MemberTableProps {
-  members: ProjectMemberWithUser[];
-  projectId: string;
+  members: RepositoryMemberWithUser[];
+  repositoryId: string;
 }
 
 /** メンバーテーブル */
-export function MemberTable({ members, projectId }: MemberTableProps) {
-  const [selectedMember, setSelectedMember] = useState<ProjectMemberWithUser | null>(null);
+export function MemberTable({ members, repositoryId }: MemberTableProps) {
+  const [selectedMember, setSelectedMember] = useState<RepositoryMemberWithUser | null>(null);
 
   console.log(members)
 
@@ -72,7 +72,7 @@ export function MemberTable({ members, projectId }: MemberTableProps) {
       {selectedMember && (
         <EditMemberDialog
           member={selectedMember}
-          projectId={projectId}
+          repositoryId={repositoryId}
           open={!!selectedMember}
           onOpenChange={(open) => {
             if (!open) setSelectedMember(null);

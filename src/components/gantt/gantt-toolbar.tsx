@@ -15,7 +15,7 @@ import { AddTaskDialog } from "@/components/tasks/add-task-dialog";
 import { AddMemberInlineDialog } from "@/components/tasks/add-member-inline-dialog";
 import { AddCategoryInlineDialog } from "@/components/tasks/add-category-inline-dialog";
 import { AddTaskGroupDialog, type TaskGroupWithCount } from "@/components/tasks/add-task-group-dialog";
-import type { ProjectMemberWithUser, Category, TaskStatusConfig } from "@/types";
+import type { RepositoryMemberWithUser, Category, TaskStatusConfig } from "@/types";
 import { Label } from "@/components/ui/label";
 
 
@@ -28,8 +28,8 @@ export interface GanttFilters {
 }
 
 interface GanttToolbarProps {
-  projectId: string;
-  members: ProjectMemberWithUser[];
+  repositoryId: string;
+  members: RepositoryMemberWithUser[];
   categories: Category[];
   statuses: TaskStatusConfig[];
   taskGroups: TaskGroupWithCount[];
@@ -39,7 +39,7 @@ interface GanttToolbarProps {
 
 /** ガントチャートツールバー */
 export function GanttToolbar({
-  projectId,
+  repositoryId,
   members,
   categories,
   statuses,
@@ -201,22 +201,22 @@ export function GanttToolbar({
       {/* 追加セクション */}
       <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-4">
         <AddTaskGroupDialog
-          projectId={projectId}
+          repositoryId={repositoryId}
           existingGroups={taskGroups}
           buttonLabel="プロジェクト追加"
         />
         <AddMemberInlineDialog
-          projectId={projectId}
+          repositoryId={repositoryId}
           existingMembers={members}
           buttonLabel="担当者追加"
         />
         <AddCategoryInlineDialog
-          projectId={projectId}
+          repositoryId={repositoryId}
           existingCategories={categories}
           buttonLabel="カテゴリー追加"
         />
         <AddTaskDialog
-          projectId={projectId}
+          repositoryId={repositoryId}
           members={members}
           categories={categories}
           statuses={statuses}

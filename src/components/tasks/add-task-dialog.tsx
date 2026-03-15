@@ -41,11 +41,11 @@ import { createTask } from "@/actions/task-actions";
 import { AddTaskGroupDialog, type TaskGroupWithCount } from "@/components/tasks/add-task-group-dialog";
 import { AddMemberInlineDialog } from "@/components/tasks/add-member-inline-dialog";
 import { AddCategoryInlineDialog } from "@/components/tasks/add-category-inline-dialog";
-import type { ProjectMemberWithUser, Category, TaskPriority, TaskStatusConfig, TaskGroup } from "@/types";
+import type { RepositoryMemberWithUser, Category, TaskPriority, TaskStatusConfig, TaskProject } from "@/types";
 
 interface AddTaskDialogProps {
-  projectId: string;
-  members: ProjectMemberWithUser[];
+  repositoryId: string;
+  members: RepositoryMemberWithUser[];
   categories: Category[];
   statuses: TaskStatusConfig[];
   taskGroups: TaskGroupWithCount[];
@@ -53,7 +53,7 @@ interface AddTaskDialogProps {
 
 /** 課題追加ダイアログ */
 export function AddTaskDialog({
-  projectId,
+  repositoryId,
   members: initialMembers,
   categories,
   statuses,
@@ -62,17 +62,17 @@ export function AddTaskDialog({
   const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
   const [localTaskGroups, setLocalTaskGroups] = useState<TaskGroupWithCount[]>(initialTaskGroups);
-  const [localMembers, setLocalMembers] = useState<ProjectMemberWithUser[]>(initialMembers);
+  const [localMembers, setLocalMembers] = useState<RepositoryMemberWithUser[]>(initialMembers);
   const [localCategories, setLocalCategories] = useState<Category[]>(categories);
 
   /** 新しいグループが追加された時のハンドラ */
-  const handleTaskGroupAdded = useCallback((newGroup: TaskGroup) => {
+  const handleTaskGroupAdded = useCallback((newGroup: TaskProject) => {
     const groupWithCount: TaskGroupWithCount = { ...newGroup, taskCount: 0 };
     setLocalTaskGroups((prev) => [...prev, groupWithCount]);
   }, []);
 
   /** 新しいメンバーが追加された時のハンドラ */
-  const handleMemberAdded = useCallback((newMember: ProjectMemberWithUser) => {
+  const handleMemberAdded = useCallback((newMember: RepositoryMemberWithUser) => {
     setLocalMembers((prev) => [...prev, newMember]);
   }, []);
 
@@ -125,14 +125,14 @@ export function AddTaskDialog({
       const createdBy = localMembers[0]?.user.id ?? "";
 
       const result = await createTask({
-        projectId,
+        repositoryId,
         summary: values.summary,
         description: values.description,
         status: values.status,
         priority: values.priority,
         assigneeId: values.assigneeId || undefined,
         categoryId: values.categoryId || undefined,
-        taskGroupId: values.taskGroupId === "__none__" ? undefined : values.taskGroupId || undefined,
+        taskProjectId: values.taskGroupId === "__none__" ? undefined : values.taskGroupId || undefined,
         progress: values.progress,
         startDate: values.startDate || undefined,
         dueDate: values.dueDate || undefined,
@@ -199,7 +199,7 @@ export function AddTaskDialog({
                       </SelectContent>
                     </Select>
                     <AddTaskGroupDialog
-                      projectId={projectId}
+                      repositoryId={repositoryId}
                       existingGroups={localTaskGroups}
                       onSuccess={handleTaskGroupAdded}
                     />
@@ -324,7 +324,7 @@ export function AddTaskDialog({
                       </SelectContent>
                     </Select>
                     <AddMemberInlineDialog
-                      projectId={projectId}
+                      repositoryId={repositoryId}
                       existingMembers={localMembers}
                       onSuccess={handleMemberAdded}
                     />
@@ -363,7 +363,7 @@ export function AddTaskDialog({
                       </SelectContent>
                     </Select>
                     <AddCategoryInlineDialog
-                      projectId={projectId}
+                      repositoryId={repositoryId}
                       existingCategories={localCategories}
                       onSuccess={handleCategoryAdded}
                     />

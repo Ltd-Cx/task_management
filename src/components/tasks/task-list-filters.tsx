@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { TASK_PRIORITY_CONFIG } from "@/lib/constants";
-import type { ProjectMemberWithUser, Category, TaskStatusConfig, TaskPriority } from "@/types";
+import type { RepositoryMemberWithUser, Category, TaskStatusConfig, TaskPriority } from "@/types";
 
 export interface TaskFilters {
   status: string | null;
@@ -21,7 +21,7 @@ export interface TaskFilters {
 
 interface TaskListFiltersProps {
   statuses: TaskStatusConfig[];
-  members: ProjectMemberWithUser[];
+  members: RepositoryMemberWithUser[];
   categories: Category[];
   filters: TaskFilters;
   onFiltersChange: (filters: TaskFilters) => void;

@@ -10,12 +10,12 @@ import type { TaskWithRelations } from "@/types";
 
 interface BoardCardProps {
   task: TaskWithRelations;
-  projectKey: string;
+  repositoryKey: string;
   isDragOverlay?: boolean;
 }
 
 /** ボードカード（課題カード） */
-export function BoardCard({ task, projectKey, isDragOverlay }: BoardCardProps) {
+export function BoardCard({ task, repositoryKey, isDragOverlay }: BoardCardProps) {
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: task.id,
   });
@@ -39,7 +39,7 @@ export function BoardCard({ task, projectKey, isDragOverlay }: BoardCardProps) {
       <CardContent className="space-y-2.5 px-3.5 py-0">
         {/* タスクキー */}
         <span className="font-mono text-xs font-medium text-muted-foreground">
-          {projectKey}-{task.keyId}
+          {repositoryKey}-{task.keyId}
         </span>
 
         {/* 件名 */}

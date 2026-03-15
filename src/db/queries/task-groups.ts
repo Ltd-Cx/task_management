@@ -1,74 +1,74 @@
 import { eq, asc, count } from "drizzle-orm";
 import { db } from "@/db";
-import { taskGroups, tasks } from "@/db/schema";
-import type { TaskGroup } from "@/types";
+import { taskProjects, tasks } from "@/db/schema";
+import type { TaskProject } from "@/types";
 
-/** プロジェクトのタスクグループ一覧を取得 */
-export async function getTaskGroups(projectId: string): Promise<TaskGroup[]> {
-  return db.query.taskGroups.findMany({
-    where: eq(taskGroups.projectId, projectId),
-    orderBy: [asc(taskGroups.displayOrder), asc(taskGroups.createdAt)],
+/** リポジトリのタスクプロジェクト一覧を取得 */
+export async function getTaskProjects(repositoryId: string): Promise<TaskProject[]> {
+  return db.query.taskProjects.findMany({
+    where: eq(taskProjects.repositoryId, repositoryId),
+    orderBy: [asc(taskProjects.displayOrder), asc(taskProjects.createdAt)],
   });
 }
 
-/** タスクグループ（課題数付き）を取得 */
-export type TaskGroupWithCount = TaskGroup & { taskCount: number };
+/** タスクプロジェクト（課題数付き）を取得 */
+export type TaskProjectWithCount = TaskProject & { taskCount: number };
 
-export async function getTaskGroupsWithCounts(projectId: string): Promise<TaskGroupWithCount[]> {
-  const groups = await db.query.taskGroups.findMany({
-    where: eq(taskGroups.projectId, projectId),
-    orderBy: [asc(taskGroups.displayOrder), asc(taskGroups.createdAt)],
+export async function getTaskProjectsWithCounts(repositoryId: string): Promise<TaskProjectWithCount[]> {
+  const projects = await db.query.taskProjects.findMany({
+    where: eq(taskProjects.repositoryId, repositoryId),
+    orderBy: [asc(taskProjects.displayOrder), asc(taskProjects.createdAt)],
   });
 
-  const groupsWithCounts = await Promise.all(
-    groups.map(async (group) => {
+  const projectsWithCounts = await Promise.all(
+    projects.map(async (project) => {
       const countResult = await db
         .select({ count: count() })
         .from(tasks)
-        .where(eq(tasks.taskGroupId, group.id));
+        .where(eq(tasks.taskProjectId, project.id));
       return {
-        ...group,
+        ...project,
         taskCount: countResult[0]?.count ?? 0,
       };
     })
   );
 
-  return groupsWithCounts;
+  return projectsWithCounts;
 }
 
-/** タスクグループを作成 */
-export async function createTaskGroup(
-  projectId: string,
+/** タスクプロジェクトを作成 */
+export async function createTaskProject(
+  repositoryId: string,
   name: string,
   color: string = "#95a5a6"
-): Promise<TaskGroup> {
-  const [group] = await db
-    .insert(taskGroups)
+): Promise<TaskProject> {
+  const [project] = await db
+    .insert(taskProjects)
     .values({
-      projectId,
+      repositoryId,
       name,
       color,
     })
     .returning();
 
-  return group;
+  return project;
 }
 
-/** タスクグループを更新 */
-export async function updateTaskGroup(
-  groupId: string,
+/** タスクプロジェクトを更新 */
+export async function updateTaskProject(
+  projectId: string,
   data: { name?: string; color?: string; displayOrder?: number }
-): Promise<TaskGroup | null> {
-  const [group] = await db
-    .update(taskGroups)
+): Promise<TaskProject | null> {
+  const [project] = await db
+    .update(taskProjects)
     .set(data)
-    .where(eq(taskGroups.id, groupId))
+    .where(eq(taskProjects.id, projectId))
     .returning();
 
-  return group ?? null;
+  return project ?? null;
 }
 
-/** タスクグループを削除 */
-export async function deleteTaskGroup(groupId: string): Promise<void> {
-  await db.delete(taskGroups).where(eq(taskGroups.id, groupId));
+/** タスクプロジェクトを削除 */
+export async function deleteTaskProject(projectId: string): Promise<void> {
+  await db.delete(taskProjects).where(eq(taskProjects.id, projectId));
 }

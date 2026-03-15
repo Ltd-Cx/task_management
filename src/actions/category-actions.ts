@@ -9,7 +9,7 @@ import type { ActionResult, Category } from "@/types";
 
 /** カテゴリー作成のバリデーションスキーマ */
 const createCategorySchema = z.object({
-  projectId: z.string().uuid(),
+  repositoryId: z.string().uuid(),
   name: z.string().min(1, "カテゴリー名は必須です").max(50, "カテゴリー名は50文字以内で入力してください"),
   color: z.string().optional(),
 });
@@ -17,7 +17,7 @@ const createCategorySchema = z.object({
 /** カテゴリー更新のバリデーションスキーマ */
 const updateCategorySchema = z.object({
   id: z.string().uuid(),
-  projectId: z.string().uuid(),
+  repositoryId: z.string().uuid(),
   name: z.string().min(1, "カテゴリー名は必須です").max(50, "カテゴリー名は50文字以内で入力してください"),
   color: z.string().optional(),
 });
@@ -25,12 +25,12 @@ const updateCategorySchema = z.object({
 /** カテゴリー削除のバリデーションスキーマ */
 const deleteCategorySchema = z.object({
   id: z.string().uuid(),
-  projectId: z.string().uuid(),
+  repositoryId: z.string().uuid(),
 });
 
 /** 並び替えのバリデーションスキーマ */
 const reorderCategoriesSchema = z.object({
-  projectId: z.string().uuid(),
+  repositoryId: z.string().uuid(),
   items: z.array(z.object({
     id: z.string().uuid(),
     displayOrder: z.number(),
@@ -41,7 +41,7 @@ const reorderCategoriesSchema = z.object({
  * カテゴリーを作成する
  */
 export async function createCategory(data: {
-  projectId: string;
+  repositoryId: string;
   name: string;
   color?: string;
 }): Promise<ActionResult<Category>> {
@@ -54,7 +54,7 @@ export async function createCategory(data: {
     // 同名カテゴリーの重複チェック
     const existing = await db.query.categories.findFirst({
       where: and(
-        eq(categories.projectId, parsed.data.projectId),
+        eq(categories.repositoryId, parsed.data.repositoryId),
         eq(categories.name, parsed.data.name)
       ),
     });
@@ -65,21 +65,21 @@ export async function createCategory(data: {
 
     // 最大 displayOrder を取得
     const maxOrderResult = await db.query.categories.findMany({
-      where: eq(categories.projectId, parsed.data.projectId),
+      where: eq(categories.repositoryId, parsed.data.repositoryId),
       orderBy: (categories, { desc }) => [desc(categories.displayOrder)],
       limit: 1,
     });
     const maxOrder = maxOrderResult[0]?.displayOrder ?? -1;
 
     const [newCategory] = await db.insert(categories).values({
-      projectId: parsed.data.projectId,
+      repositoryId: parsed.data.repositoryId,
       name: parsed.data.name,
       color: parsed.data.color ?? null,
       displayOrder: maxOrder + 1,
     }).returning();
 
-    revalidatePath(`/projects/${parsed.data.projectId}/settings`);
-    revalidatePath(`/projects/${parsed.data.projectId}/tasks`);
+    revalidatePath(`/repositories/${parsed.data.repositoryId}/settings`);
+    revalidatePath(`/repositories/${parsed.data.repositoryId}/tasks`);
 
     return { success: true, data: newCategory };
   } catch (error) {
@@ -93,7 +93,7 @@ export async function createCategory(data: {
  */
 export async function updateCategory(data: {
   id: string;
-  projectId: string;
+  repositoryId: string;
   name: string;
   color?: string;
 }): Promise<ActionResult> {
@@ -106,7 +106,7 @@ export async function updateCategory(data: {
     // 同名カテゴリーの重複チェック（自分自身は除く）
     const existing = await db.query.categories.findFirst({
       where: and(
-        eq(categories.projectId, parsed.data.projectId),
+        eq(categories.repositoryId, parsed.data.repositoryId),
         eq(categories.name, parsed.data.name)
       ),
     });
@@ -123,8 +123,8 @@ export async function updateCategory(data: {
       })
       .where(eq(categories.id, parsed.data.id));
 
-    revalidatePath(`/projects/${parsed.data.projectId}/settings`);
-    revalidatePath(`/projects/${parsed.data.projectId}/tasks`);
+    revalidatePath(`/repositories/${parsed.data.repositoryId}/settings`);
+    revalidatePath(`/repositories/${parsed.data.repositoryId}/tasks`);
 
     return { success: true };
   } catch (error) {
@@ -138,7 +138,7 @@ export async function updateCategory(data: {
  */
 export async function deleteCategory(data: {
   id: string;
-  projectId: string;
+  repositoryId: string;
 }): Promise<ActionResult> {
   try {
     const parsed = deleteCategorySchema.safeParse(data);
@@ -148,8 +148,8 @@ export async function deleteCategory(data: {
 
     await db.delete(categories).where(eq(categories.id, parsed.data.id));
 
-    revalidatePath(`/projects/${parsed.data.projectId}/settings`);
-    revalidatePath(`/projects/${parsed.data.projectId}/tasks`);
+    revalidatePath(`/repositories/${parsed.data.repositoryId}/settings`);
+    revalidatePath(`/repositories/${parsed.data.repositoryId}/tasks`);
 
     return { success: true };
   } catch (error) {
@@ -162,7 +162,7 @@ export async function deleteCategory(data: {
  * カテゴリーの並び順を更新する
  */
 export async function reorderCategories(data: {
-  projectId: string;
+  repositoryId: string;
   items: { id: string; displayOrder: number }[];
 }): Promise<ActionResult> {
   try {
@@ -181,7 +181,7 @@ export async function reorderCategories(data: {
       )
     );
 
-    revalidatePath(`/projects/${parsed.data.projectId}/settings`);
+    revalidatePath(`/repositories/${parsed.data.repositoryId}/settings`);
 
     return { success: true };
   } catch (error) {

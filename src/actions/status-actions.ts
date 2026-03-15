@@ -8,7 +8,7 @@ import { taskStatuses } from "@/db/schema";
 import type { ActionResult } from "@/types";
 
 const createStatusSchema = z.object({
-  projectId: z.string().uuid(),
+  repositoryId: z.string().uuid(),
   key: z.string().trim().min(1).max(50).regex(/^[a-z0-9_]+$/, "英小文字・数字・アンダースコアのみ"),
   label: z.string().trim().min(1, "ステータス名は必須です").max(50),
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, "カラーコードが無効です"),
@@ -16,7 +16,7 @@ const createStatusSchema = z.object({
 
 const updateStatusSchema = z.object({
   id: z.string().uuid(),
-  projectId: z.string().uuid(),
+  repositoryId: z.string().uuid(),
   label: z.string().trim().min(1).max(50),
   color: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
   displayOrder: z.number().int().min(0),
@@ -24,7 +24,7 @@ const updateStatusSchema = z.object({
 
 /** カスタムステータスを作成 */
 export async function createCustomStatus(data: {
-  projectId: string;
+  repositoryId: string;
   key: string;
   label: string;
   color: string;
@@ -35,10 +35,10 @@ export async function createCustomStatus(data: {
       return { success: false, error: parsed.error.issues[0]?.message ?? "入力内容に誤りがあります" };
     }
 
-    // 同一プロジェクト内でkeyの重複チェック
+    // 同一リポジトリ内でkeyの重複チェック
     const existing = await db.query.taskStatuses.findFirst({
       where: and(
-        eq(taskStatuses.projectId, parsed.data.projectId),
+        eq(taskStatuses.repositoryId, parsed.data.repositoryId),
         eq(taskStatuses.key, parsed.data.key)
       ),
     });
@@ -48,7 +48,7 @@ export async function createCustomStatus(data: {
 
     // displayOrder は既存の最大値 + 1
     const allStatuses = await db.query.taskStatuses.findMany({
-      where: eq(taskStatuses.projectId, parsed.data.projectId),
+      where: eq(taskStatuses.repositoryId, parsed.data.repositoryId),
     });
     const maxOrder = allStatuses.reduce((max, s) => Math.max(max, s.displayOrder), -1);
 
@@ -57,9 +57,9 @@ export async function createCustomStatus(data: {
       displayOrder: maxOrder + 1,
     });
 
-    revalidatePath(`/projects/${parsed.data.projectId}/settings`);
-    revalidatePath(`/projects/${parsed.data.projectId}/board`);
-    revalidatePath(`/projects/${parsed.data.projectId}/tasks`);
+    revalidatePath(`/repositories/${parsed.data.repositoryId}/settings`);
+    revalidatePath(`/repositories/${parsed.data.repositoryId}/board`);
+    revalidatePath(`/repositories/${parsed.data.repositoryId}/tasks`);
 
     return { success: true };
   } catch (error) {
@@ -71,7 +71,7 @@ export async function createCustomStatus(data: {
 /** カスタムステータスを更新 */
 export async function updateCustomStatus(data: {
   id: string;
-  projectId: string;
+  repositoryId: string;
   label: string;
   color: string;
   displayOrder: number;
@@ -91,8 +91,8 @@ export async function updateCustomStatus(data: {
       })
       .where(eq(taskStatuses.id, parsed.data.id));
 
-    revalidatePath(`/projects/${parsed.data.projectId}/settings`);
-    revalidatePath(`/projects/${parsed.data.projectId}/board`);
+    revalidatePath(`/repositories/${parsed.data.repositoryId}/settings`);
+    revalidatePath(`/repositories/${parsed.data.repositoryId}/board`);
 
     return { success: true };
   } catch (error) {
@@ -104,12 +104,12 @@ export async function updateCustomStatus(data: {
 /** カスタムステータスを削除 */
 export async function deleteCustomStatus(data: {
   id: string;
-  projectId: string;
+  repositoryId: string;
 }): Promise<ActionResult> {
   try {
     await db.delete(taskStatuses).where(eq(taskStatuses.id, data.id));
-    revalidatePath(`/projects/${data.projectId}/settings`);
-    revalidatePath(`/projects/${data.projectId}/board`);
+    revalidatePath(`/repositories/${data.repositoryId}/settings`);
+    revalidatePath(`/repositories/${data.repositoryId}/board`);
     return { success: true };
   } catch (error) {
     const message = error instanceof Error ? error.message : "ステータスの削除に失敗しました";
@@ -119,7 +119,7 @@ export async function deleteCustomStatus(data: {
 
 /** ステータスの表示順を一括更新 */
 export async function reorderStatuses(data: {
-  projectId: string;
+  repositoryId: string;
   items: { id: string; displayOrder: number }[];
 }): Promise<ActionResult> {
   try {
@@ -132,8 +132,8 @@ export async function reorderStatuses(data: {
       )
     );
 
-    revalidatePath(`/projects/${data.projectId}/settings`);
-    revalidatePath(`/projects/${data.projectId}/board`);
+    revalidatePath(`/repositories/${data.repositoryId}/settings`);
+    revalidatePath(`/repositories/${data.repositoryId}/board`);
 
     return { success: true };
   } catch (error) {

@@ -6,7 +6,7 @@ import { GanttView } from "@/components/gantt/gantt-view";
 import type { TaskGroupWithCount } from "@/components/tasks/add-task-group-dialog";
 import type {
   TaskWithRelations,
-  ProjectMemberWithUser,
+  RepositoryMemberWithUser,
   Category,
   TaskStatusConfig,
 } from "@/types";
@@ -14,9 +14,9 @@ import type {
 interface GanttPageClientProps {
   tasks: TaskWithRelations[];
   taskGroups: TaskGroupWithCount[];
-  projectKey: string;
-  projectId: string;
-  members: ProjectMemberWithUser[];
+  repositoryKey: string;
+  repositoryId: string;
+  members: RepositoryMemberWithUser[];
   categories: Category[];
   statuses: TaskStatusConfig[];
 }
@@ -25,8 +25,8 @@ interface GanttPageClientProps {
 export function GanttPageClient({
   tasks,
   taskGroups,
-  projectKey,
-  projectId,
+  repositoryKey,
+  repositoryId,
   members,
   categories,
   statuses,
@@ -42,12 +42,12 @@ export function GanttPageClient({
   /** フィルター適用後のタスク */
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
-      // グループフィルター
+      // プロジェクトフィルター
       if (filters.taskGroupId) {
         if (filters.taskGroupId === "__none__") {
-          if (task.taskGroupId) return false;
+          if (task.taskProjectId) return false;
         } else {
-          if (task.taskGroupId !== filters.taskGroupId) return false;
+          if (task.taskProjectId !== filters.taskGroupId) return false;
         }
       }
 
@@ -78,7 +78,7 @@ export function GanttPageClient({
   return (
     <div className="flex flex-1 flex-col gap-6 overflow-hidden p-6">
       <GanttToolbar
-        projectId={projectId}
+        repositoryId={repositoryId}
         members={members}
         categories={categories}
         statuses={statuses}
@@ -90,8 +90,8 @@ export function GanttPageClient({
         <GanttView
           tasks={filteredTasks}
           taskGroups={taskGroups}
-          projectKey={projectKey}
-          projectId={projectId}
+          repositoryKey={repositoryKey}
+          repositoryId={repositoryId}
           members={members}
           categories={categories}
           statuses={statuses}
