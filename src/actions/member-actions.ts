@@ -78,3 +78,42 @@ export async function removeMember(data: {
     return { success: false, error: message };
   }
 }
+
+/** メンバー更新のバリデーションスキーマ */
+const updateMemberSchema = z.object({
+  projectId: z.string().uuid(),
+  userId: z.string().uuid(),
+  role: z.enum(["admin", "member"]),
+});
+
+/**
+ * メンバー情報を更新する
+ */
+export async function updateMember(data: {
+  projectId: string;
+  userId: string;
+  role: string;
+}): Promise<ActionResult> {
+  try {
+    const parsed = updateMemberSchema.safeParse(data);
+    if (!parsed.success) {
+      return { success: false, error: "入力内容に誤りがあります" };
+    }
+
+    await db
+      .update(projectMembers)
+      .set({ role: parsed.data.role })
+      .where(
+        and(
+          eq(projectMembers.projectId, parsed.data.projectId),
+          eq(projectMembers.userId, parsed.data.userId)
+        )
+      );
+
+    revalidatePath(`/projects/${parsed.data.projectId}/members`);
+    return { success: true };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "メンバーの更新に失敗しました";
+    return { success: false, error: message };
+  }
+}

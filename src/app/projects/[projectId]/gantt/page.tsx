@@ -3,10 +3,9 @@ import { getProject, getCategories } from "@/db/queries/projects";
 import { getProjectMembersWithUsers } from "@/db/queries/members";
 import { getTasksWithDates } from "@/db/queries/tasks";
 import { getProjectStatusesWithDefaults } from "@/db/queries/statuses";
-import { getTaskGroups } from "@/db/queries/task-groups";
+import { getTaskGroupsWithCounts } from "@/db/queries/task-groups";
 import { ProjectHeader } from "@/components/project-header";
-import { GanttView } from "@/components/gantt/gantt-view";
-import { PageToolbar } from "@/components/shared/page-toolbar";
+import { GanttPageClient } from "@/components/gantt/gantt-page-client";
 
 type Props = {
   params: Promise<{ projectId: string }>;
@@ -23,7 +22,7 @@ export default async function GanttPage({ params }: Props) {
       getProjectMembersWithUsers(projectId),
       getCategories(projectId),
       getProjectStatusesWithDefaults(projectId),
-      getTaskGroups(projectId),
+      getTaskGroupsWithCounts(projectId),
     ]);
 
   if (!project) {
@@ -33,20 +32,15 @@ export default async function GanttPage({ params }: Props) {
   return (
     <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
       <ProjectHeader projectName={project.name} currentPage="ガントチャート" />
-      <div className="flex flex-1 flex-col gap-6 overflow-hidden p-6">
-        <PageToolbar title="ガントチャート" />
-        <div className="min-h-0 flex-1 overflow-hidden">
-          <GanttView
-            tasks={tasks}
-            taskGroups={taskGroups}
-            projectKey={project.key}
-            projectId={projectId}
-            members={members}
-            categories={categories}
-            statuses={statuses}
-          />
-        </div>
-      </div>
+      <GanttPageClient
+        tasks={tasks}
+        taskGroups={taskGroups}
+        projectKey={project.key}
+        projectId={projectId}
+        members={members}
+        categories={categories}
+        statuses={statuses}
+      />
     </div>
   );
 }

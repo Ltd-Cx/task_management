@@ -61,6 +61,7 @@ export const tasks = pgTable("tasks", {
   startDate: date("start_date"),
   dueDate: date("due_date"),
   progress: integer("progress").notNull().default(0),
+  statusMemo: text("status_memo"),
   createdBy: uuid("created_by").references(() => users.id).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),

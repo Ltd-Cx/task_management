@@ -89,7 +89,7 @@ export function AddUserDialog({ projectId }: AddUserDialogProps) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="sm" variant="outline">
+        <Button variant="default" className="rounded-full">
           <UserPlus className="size-4" />
           ユーザー追加
         </Button>

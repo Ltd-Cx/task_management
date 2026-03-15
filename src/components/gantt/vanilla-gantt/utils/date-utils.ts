@@ -68,7 +68,7 @@ export function generateMonthCells(dates: DateCell[]): MonthCell[] {
         months.push({
           year: currentYear,
           month: currentMonth + 1,
-          label: `${currentMonth + 1}月`,
+          label: `${currentYear}年${currentMonth + 1}月`,
           width: dayCount * GANTT_CONSTANTS.CELL_WIDTH,
         });
       }
@@ -85,7 +85,7 @@ export function generateMonthCells(dates: DateCell[]): MonthCell[] {
       months.push({
         year: currentYear,
         month: currentMonth + 1,
-        label: `${currentMonth + 1}月`,
+        label: `${currentYear}年${currentMonth + 1}月`,
         width: dayCount * GANTT_CONSTANTS.CELL_WIDTH,
       });
     }

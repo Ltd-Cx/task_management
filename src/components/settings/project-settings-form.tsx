@@ -21,9 +21,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { updateProject } from "@/actions/project-actions";
 import type { Project } from "@/types";
+import { Save } from "lucide-react";
 
 const settingsFormSchema = z.object({
-  name: z.string().min(1, "プロジェクト名は必須です").max(100),
+  name: z.string().min(1, "リポジトリ名は必須です").max(100),
   description: z.string().optional(),
 });
 
@@ -33,7 +34,7 @@ interface ProjectSettingsFormProps {
   project: Project;
 }
 
-/** プロジェクト設定フォーム */
+/** リポジトリ設定フォーム */
 export function ProjectSettingsForm({ project }: ProjectSettingsFormProps) {
   const [isPending, startTransition] = useTransition();
 
@@ -65,7 +66,7 @@ export function ProjectSettingsForm({ project }: ProjectSettingsFormProps) {
     <Card className="shadow-sm">
       <CardHeader>
         <CardTitle>基本設定</CardTitle>
-        <p className="text-sm text-muted-foreground">プロジェクトの基本情報を編集します。</p>
+        <p className="text-sm text-muted-foreground">リポジトリの基本情報を編集します。</p>
       </CardHeader>
       <CardContent>
         <Separator className="mb-6" />
@@ -76,7 +77,7 @@ export function ProjectSettingsForm({ project }: ProjectSettingsFormProps) {
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>プロジェクト名</FormLabel>
+                  <FormLabel>リポジトリ名</FormLabel>
                   <FormControl>
                     <Input {...field} />
                   </FormControl>
@@ -86,10 +87,10 @@ export function ProjectSettingsForm({ project }: ProjectSettingsFormProps) {
             />
 
             <FormItem>
-              <FormLabel>プロジェクトキー</FormLabel>
+              <FormLabel>リポジトリキー</FormLabel>
               <Input value={project.key} disabled />
               <FormDescription>
-                プロジェクトキーは変更できません
+                リポジトリキーは変更できません
               </FormDescription>
             </FormItem>
 
@@ -110,10 +111,8 @@ export function ProjectSettingsForm({ project }: ProjectSettingsFormProps) {
             <Separator />
 
             <div className="flex gap-3">
-              <Button type="button" variant="outline">
-                キャンセル
-              </Button>
-              <Button type="submit" disabled={isPending}>
+              <Button type="submit" disabled={isPending} className="rounded-full">
+                <Save />
                 {isPending ? "保存中..." : "保存"}
               </Button>
             </div>

@@ -37,7 +37,7 @@ export default async function MembersPage({ params }: Props) {
           </div>
         </PageToolbar>
 
-        <MemberTable members={members} />
+        <MemberTable members={members} projectId={projectId} />
       </div>
     </>
   );

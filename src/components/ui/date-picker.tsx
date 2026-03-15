@@ -18,6 +18,7 @@ interface DatePickerProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  rounded?: boolean;
 }
 
 /** 日付選択コンポーネント */
@@ -26,6 +27,7 @@ export function DatePicker({
   onChange,
   placeholder = "日付を選択",
   className,
+  rounded = false,
 }: DatePickerProps) {
   const [open, setOpen] = React.useState(false);
 
@@ -54,7 +56,8 @@ export function DatePicker({
             className={cn(
               "w-full justify-start text-left font-normal",
               !date && "text-muted-foreground",
-              date && "pr-10"
+              date && "pr-10",
+              rounded && "rounded-full"
             )}
           >
             <CalendarIcon className="mr-2 size-4 shrink-0" />

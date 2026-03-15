@@ -12,10 +12,15 @@ export const GANTT_CONSTANTS = {
   RESIZE_HANDLE_WIDTH: 10,  // リサイズハンドルの幅
 } as const;
 
-/** ガントチャート用のタスクデータ */
+/** タスクグループ（課題数付き） */
+export interface TaskGroupWithCount extends TaskGroup {
+  taskCount: number;
+}
+
+/** ガントチャート用のタスクデータ（日付は任意） */
 export interface GanttTask extends TaskWithRelations {
-  startDate: string;
-  dueDate: string;
+  startDate: string | null;
+  dueDate: string | null;
 }
 
 /** グループ化されたタスク */
@@ -23,6 +28,14 @@ export interface GanttTaskGroup {
   group: TaskGroup | null;
   tasks: GanttTask[];
   isCollapsed: boolean;
+}
+
+/** 日付範囲を持つタスク（バー表示可能） */
+export type GanttTaskWithDateRange = GanttTask & { startDate: string; dueDate: string };
+
+/** タスクがバー表示可能かどうか */
+export function hasDateRange(task: GanttTask): task is GanttTaskWithDateRange {
+  return task.startDate != null && task.dueDate != null;
 }
 
 /** ドラッグ状態 */
@@ -39,7 +52,7 @@ export interface DragState {
 /** ガントチャートのProps */
 export interface GanttChartProps {
   tasks: TaskWithRelations[];
-  taskGroups: TaskGroup[];
+  taskGroups: TaskGroupWithCount[];
   projectKey: string;
   projectId: string;
   viewStartDate: Date;

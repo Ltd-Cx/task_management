@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useMemo, useEffect, useRef } from "react";
-import { GANTT_CONSTANTS, type GanttTask, type DragState } from "./types";
+import { GANTT_CONSTANTS, type GanttTaskWithDateRange, type DragState } from "./types";
 import {
   calculateTaskBarLeft,
   calculateTaskBarWidth,
@@ -9,7 +9,7 @@ import {
 import { cn } from "@/lib/utils";
 
 interface GanttTaskBarProps {
-  task: GanttTask;
+  task: GanttTaskWithDateRange;
   timelineStartDate: Date;
   groupColor: string;
   registerTaskBar: (taskId: string, element: HTMLDivElement | null) => void;

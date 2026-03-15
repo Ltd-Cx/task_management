@@ -8,21 +8,28 @@ import type {
   ProjectMemberWithUser,
   Category,
   TaskStatusConfig,
-  TaskGroup,
 } from "@/types";
-import { EditTaskDialog } from "@/components/tasks/edit-task-dialog";
+import type { TaskGroupWithCount } from "@/components/tasks/add-task-group-dialog";
+import { TaskDetailDialog } from "@/components/tasks/task-detail-dialog";
 
 const GanttChart = dynamic(
   () =>
     import("@/components/gantt/vanilla-gantt/gantt-chart").then(
       (mod) => mod.GanttChart
     ),
-  { ssr: false }
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full w-full items-center justify-center">
+        <div className="loading-spinner" />
+      </div>
+    ),
+  }
 );
 
 interface GanttViewProps {
   tasks: TaskWithRelations[];
-  taskGroups: TaskGroup[];
+  taskGroups: TaskGroupWithCount[];
   projectKey: string;
   projectId: string;
   members: ProjectMemberWithUser[];
@@ -41,9 +48,7 @@ export function GanttView({
   statuses,
 }: GanttViewProps) {
   const router = useRouter();
-  const [selectedTask, setSelectedTask] = useState<TaskWithRelations | null>(
-    null
-  );
+  const [selectedTask, setSelectedTask] = useState<TaskWithRelations | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
   /** タスククリック時のハンドラ（APIから最新データを取得） */
@@ -135,17 +140,18 @@ export function GanttView({
         />
       </div>
 
-      {/* 編集ダイアログ */}
+      {/* 詳細ダイアログ */}
       {selectedTask && (
-        <EditTaskDialog
+        <TaskDetailDialog
           task={selectedTask}
+          projectKey={projectKey}
           projectId={projectId}
           members={members}
           categories={categories}
           statuses={statuses}
+          taskGroups={taskGroups}
           open={dialogOpen}
           onOpenChange={setDialogOpen}
-          onSuccess={handleTaskUpdated}
         />
       )}
     </div>

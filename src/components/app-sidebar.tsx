@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import {
@@ -11,6 +12,9 @@ import {
   Settings,
   Search,
   FolderKanban,
+  Plus,
+  ChevronsUpDown,
+  Check,
 } from "lucide-react";
 import {
   Sidebar,
@@ -24,9 +28,30 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
-import type { Project, User } from "@/types";
+import type { Project, User, TaskGroup } from "@/types";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { AddProjectDialog } from "@/components/projects/add-project-dialog";
+
+/** プロジェクト情報（グループと課題数付き） */
+interface ProjectWithStats {
+  id: string;
+  name: string;
+  key: string;
+  description: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+  taskGroups: TaskGroup[];
+  taskCount: number;
+}
 /** アイコンマッピング */
 const iconMap = {
   LayoutDashboard,
@@ -50,17 +75,24 @@ const NAV_ITEMS = [
 interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   project: Project;
   currentUser?: User;
+  allProjects?: ProjectWithStats[];
 }
 
 /** プロジェクト用サイドバー */
-export function AppSidebar({ project, currentUser, ...props }: AppSidebarProps) {
+export function AppSidebar({ project, currentUser, allProjects = [], ...props }: AppSidebarProps) {
   const pathname = usePathname();
   const { setOpenMobile } = useSidebar();
   const basePath = `/projects/${project.id}`;
+  const [mounted, setMounted] = useState(false);
 
   const displayName = currentUser?.displayName ?? "ゲスト";
   const email = currentUser?.email ?? "";
   const avatarUrl = currentUser?.avatarUrl ?? undefined;
+
+  // クライアントサイドでマウント後にのみDropdownMenuを表示（ハイドレーションエラー回避）
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   /** モバイルでサイドバーを閉じる */
   const handleLinkClick = () => {
@@ -70,27 +102,97 @@ export function AppSidebar({ project, currentUser, ...props }: AppSidebarProps) 
   return (
     <Sidebar variant="inset" {...props}>
       <SidebarHeader>
-        {/* ロゴ */}
+        {/* プロジェクト選択 */}
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link href={basePath} onClick={handleLinkClick}>
-                <Avatar>
-                  <AvatarImage src={avatarUrl} alt={project.name} />
-                  <AvatarFallback className="bg-primary text-primary-foreground">
+            {mounted ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton
+                    size="lg"
+                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                  >
+                    <Avatar className="size-8">
+                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                        {project.key.slice(0, 2).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="grid flex-1 text-left text-sm leading-tight">
+                      <span className="truncate font-semibold">
+                        {project.name}
+                      </span>
+                      <span className="truncate text-xs text-muted-foreground">
+                        {project.key}
+                      </span>
+                    </div>
+                    <ChevronsUpDown className="ml-auto size-4" />
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                  align="start"
+                  side="bottom"
+                  sideOffset={4}
+                >
+                  <DropdownMenuLabel className="text-xs text-muted-foreground">
+                    プロジェクト一覧
+                  </DropdownMenuLabel>
+                  {allProjects.map((p) => (
+                    <DropdownMenuItem key={p.id} asChild>
+                      <Link
+                        href={`/projects/${p.id}`}
+                        onClick={handleLinkClick}
+                        className="flex items-center gap-2"
+                      >
+                        <Avatar className="size-6">
+                          <AvatarFallback className="bg-primary text-primary-foreground text-[10px]">
+                            {p.key.slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="truncate text-sm">{p.name}</span>
+                            {p.id === project.id && (
+                              <Check className="size-4 shrink-0" />
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground truncate">
+                            {p.taskGroups.length > 0
+                              ? p.taskGroups.map((g) => g.name).join(", ")
+                              : "グループなし"}{" "}
+                            · {p.taskCount}件
+                          </div>
+                        </div>
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+                  <DropdownMenuSeparator />
+                  <div className="p-1">
+                    <AddProjectDialog
+                      projects={allProjects}
+                      currentUserId={currentUser?.id ?? ""}
+                    />
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <SidebarMenuButton size="lg">
+                <Avatar className="size-8">
+                  <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                     {project.key.slice(0, 2).toUpperCase()}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">
-                    Simple Todo App
+                    {project.name}
                   </span>
                   <span className="truncate text-xs text-muted-foreground">
-                    プロジェクト管理
+                    {project.key}
                   </span>
                 </div>
-              </Link>
-            </SidebarMenuButton>
+                <ChevronsUpDown className="ml-auto size-4" />
+              </SidebarMenuButton>
+            )}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>

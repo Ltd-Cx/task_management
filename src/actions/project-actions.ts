@@ -5,8 +5,62 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { db } from "@/db";
-import { projects } from "@/db/schema";
-import type { ActionResult } from "@/types";
+import { projects, projectMembers } from "@/db/schema";
+import type { ActionResult, Project } from "@/types";
+
+/** プロジェクト作成のバリデーションスキーマ */
+const createProjectSchema = z.object({
+  name: z.string().trim().min(1, "プロジェクト名は必須です").max(100, "プロジェクト名は100文字以内で入力してください"),
+  key: z.string().trim().min(1, "プロジェクトキーは必須です").max(10, "プロジェクトキーは10文字以内で入力してください").regex(/^[A-Z0-9_]+$/, "プロジェクトキーは大文字英数字とアンダースコアのみ使用できます"),
+  description: z.string().optional(),
+});
+
+/**
+ * プロジェクトを作成する
+ */
+export async function createProject(data: {
+  name: string;
+  key: string;
+  description?: string;
+  createdBy: string;
+}): Promise<ActionResult<Project>> {
+  try {
+    const parsed = createProjectSchema.safeParse(data);
+    if (!parsed.success) {
+      return { success: false, error: parsed.error.issues[0]?.message ?? "入力内容に誤りがあります" };
+    }
+
+    // プロジェクトキーの重複チェック
+    const existing = await db.query.projects.findFirst({
+      where: eq(projects.key, parsed.data.key),
+    });
+    if (existing) {
+      return { success: false, error: "このプロジェクトキーは既に使用されています" };
+    }
+
+    const [newProject] = await db.insert(projects).values({
+      name: parsed.data.name,
+      key: parsed.data.key,
+      description: parsed.data.description ?? null,
+    }).returning();
+
+    // 作成者をプロジェクトメンバーとして追加
+    if (newProject && data.createdBy) {
+      await db.insert(projectMembers).values({
+        projectId: newProject.id,
+        userId: data.createdBy,
+        role: "admin",
+      });
+    }
+
+    revalidatePath("/");
+
+    return { success: true, data: newProject };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "プロジェクトの作成に失敗しました";
+    return { success: false, error: message };
+  }
+}
 
 /** プロジェクト更新のバリデーションスキーマ */
 const updateProjectSchema = z.object({

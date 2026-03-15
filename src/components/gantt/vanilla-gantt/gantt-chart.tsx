@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import type { TaskWithRelations, TaskGroup } from "@/types";
+import type { TaskWithRelations } from "@/types";
 import {
   GANTT_CONSTANTS,
   type GanttTask,
   type GanttTaskGroup,
+  type TaskGroupWithCount,
+  hasDateRange,
 } from "./types";
 import {
   generateDateRange,
@@ -24,7 +26,7 @@ import { Loader2 } from "lucide-react";
 
 interface GanttChartProps {
   tasks: TaskWithRelations[];
-  taskGroups: TaskGroup[];
+  taskGroups: TaskGroupWithCount[];
   projectKey: string;
   projectId: string;
   onTaskClick?: (taskId: string) => void;
@@ -114,15 +116,13 @@ export function GanttChart({
 
   const months = useMemo(() => generateMonthCells(dates), [dates]);
 
-  // タスクをフィルタリング（開始日と期限日があるもののみ）
+  // タスクをGanttTask形式に変換（日付がなくても含める）
   const ganttTasks = useMemo((): GanttTask[] => {
-    return tasks
-      .filter((t) => t.startDate != null && t.dueDate != null)
-      .map((t) => ({
-        ...t,
-        startDate: t.startDate!,
-        dueDate: t.dueDate!,
-      }));
+    return tasks.map((t) => ({
+      ...t,
+      startDate: t.startDate ?? null,
+      dueDate: t.dueDate ?? null,
+    }));
   }, [tasks]);
 
   // タスクをグループ化
@@ -212,10 +212,11 @@ export function GanttChart({
 
   const totalWidth = dates.length * GANTT_CONSTANTS.CELL_WIDTH;
 
-  if (ganttTasks.length === 0) {
+  // タスクがない場合のメッセージ
+  if (tasks.length === 0) {
     return (
       <div className="flex h-full items-center justify-center text-gray-500">
-        開始日と期限が設定されたタスクがありません
+        タスクがありません
       </div>
     );
   }
@@ -322,14 +323,17 @@ export function GanttChart({
                             height: `${GANTT_CONSTANTS.TASK_ROW_HEIGHT}px`,
                           }}
                         >
-                          <GanttTaskBar
-                            task={task}
-                            timelineStartDate={viewStartDate}
-                            groupColor={groupColor}
-                            registerTaskBar={registerTaskBar}
-                            onMouseDown={handleMouseDown}
-                            onDoubleClick={onTaskClick}
-                          />
+                          {/* 日付がある場合のみバーを表示 */}
+                          {hasDateRange(task) && (
+                            <GanttTaskBar
+                              task={task}
+                              timelineStartDate={viewStartDate}
+                              groupColor={groupColor}
+                              registerTaskBar={registerTaskBar}
+                              onMouseDown={handleMouseDown}
+                              onDoubleClick={onTaskClick}
+                            />
+                          )}
                         </div>
                       ))}
                     </div>

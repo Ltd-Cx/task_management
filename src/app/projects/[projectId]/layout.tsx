@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { getProject } from "@/db/queries/projects";
+import { getProject, getProjectsWithStats } from "@/db/queries/projects";
 import { getCurrentUser } from "@/db/queries/users";
 
 
@@ -14,9 +14,10 @@ export default async function ProjectLayout({
   params: Promise<{ projectId: string }>;
 }) {
   const { projectId } = await params;
-  const [project, currentUser] = await Promise.all([
+  const [project, currentUser, projectsWithStats] = await Promise.all([
     getProject(projectId),
     getCurrentUser(),
+    getProjectsWithStats(),
   ]);
 
   if (!project) {
@@ -25,7 +26,11 @@ export default async function ProjectLayout({
 
   return (
     <SidebarProvider>
-      <AppSidebar project={project} currentUser={currentUser ?? undefined} />
+      <AppSidebar
+        project={project}
+        currentUser={currentUser ?? undefined}
+        allProjects={projectsWithStats}
+      />
       <SidebarInset>{children}</SidebarInset>
     </SidebarProvider>
   );

@@ -6,7 +6,7 @@ import { GANTT_CONSTANTS } from "../types";
 const DAYS_TO_ADD = 365; // 追加する日数（1年）
 const SCROLL_THRESHOLD = 400; // スクロール閾値（px）
 const EDGE_ZONE_RATIO = 0.15; // エッジゾーン（画面幅の15%）
-const MAX_SCROLL_SPEED = 1010; // 最大スクロール速度（px/frame）
+const MAX_SCROLL_SPEED = 5; // 最大スクロール速度（px/frame）
 const MIN_SCROLL_SPEED = 1; // 最小スクロール速度（px/frame）
 
 interface UseInfiniteTimelineProps {

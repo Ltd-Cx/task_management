@@ -19,6 +19,8 @@ const createTaskBaseSchema = z.object({
   priority: z.enum(["high", "medium", "low"]).optional(),
   assigneeId: z.string().uuid().optional().or(z.literal("")),
   categoryId: z.string().uuid().optional().or(z.literal("")),
+  taskGroupId: z.string().uuid().optional().or(z.literal("")),
+  progress: z.number().min(0).max(100).optional(),
   startDate: z.string().optional(),
   dueDate: z.string().optional(),
 });
@@ -41,6 +43,8 @@ export async function createTask(data: {
   priority?: string;
   assigneeId?: string;
   categoryId?: string;
+  taskGroupId?: string;
+  progress?: number;
   startDate?: string;
   dueDate?: string;
   createdBy: string;
@@ -51,7 +55,7 @@ export async function createTask(data: {
       return { success: false, error: parsed.error.issues[0]?.message ?? "入力内容に誤りがあります" };
     }
 
-    const { projectId, assigneeId, categoryId, status, description, ...taskData } = parsed.data;
+    const { projectId, assigneeId, categoryId, taskGroupId, progress, status, description, ...taskData } = parsed.data;
 
     // 動的ステータスバリデーション
     if (status) {
@@ -71,6 +75,8 @@ export async function createTask(data: {
       projectId,
       assigneeId: assigneeId || null,
       categoryId: categoryId || null,
+      taskGroupId: taskGroupId || null,
+      progress: progress ?? 0,
       createdBy: data.createdBy,
     });
 
@@ -150,6 +156,9 @@ const updateTaskBaseSchema = z.object({
   priority: z.enum(["high", "medium", "low"]).optional(),
   assigneeId: z.string().uuid().optional().or(z.literal("")),
   categoryId: z.string().uuid().optional().or(z.literal("")),
+  taskGroupId: z.string().uuid().optional().or(z.literal("")),
+  progress: z.number().min(0).max(100).optional(),
+  statusMemo: z.string().optional(),
   startDate: z.string().optional(),
   dueDate: z.string().optional(),
 });
@@ -166,6 +175,9 @@ export async function updateTask(data: {
   priority?: string;
   assigneeId?: string;
   categoryId?: string;
+  taskGroupId?: string;
+  progress?: number;
+  statusMemo?: string;
   startDate?: string;
   dueDate?: string;
 }): Promise<ActionResult> {
@@ -175,7 +187,7 @@ export async function updateTask(data: {
       return { success: false, error: parsed.error.issues[0]?.message ?? "入力内容に誤りがあります" };
     }
 
-    const { taskId, projectId, assigneeId, categoryId, status, description, ...taskData } = parsed.data;
+    const { taskId, projectId, assigneeId, categoryId, taskGroupId, progress, status, description, statusMemo, ...taskData } = parsed.data;
 
     // 動的ステータスバリデーション
     if (status) {
@@ -187,6 +199,7 @@ export async function updateTask(data: {
 
     // HTML サニタイズ
     const sanitizedDescription = isHtmlEmpty(description) ? null : sanitizeHtml(description);
+    const sanitizedStatusMemo = isHtmlEmpty(statusMemo) ? null : sanitizeHtml(statusMemo);
 
     await db
       .update(tasks)
@@ -196,6 +209,9 @@ export async function updateTask(data: {
         status: status,
         assigneeId: assigneeId || null,
         categoryId: categoryId || null,
+        taskGroupId: taskGroupId || null,
+        progress: progress ?? 0,
+        statusMemo: sanitizedStatusMemo,
         startDate: taskData.startDate || null,
         dueDate: taskData.dueDate || null,
         updatedAt: new Date(),

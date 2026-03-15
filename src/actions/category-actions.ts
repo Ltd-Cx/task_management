@@ -5,7 +5,7 @@ import { eq, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { categories } from "@/db/schema";
-import type { ActionResult } from "@/types";
+import type { ActionResult, Category } from "@/types";
 
 /** カテゴリー作成のバリデーションスキーマ */
 const createCategorySchema = z.object({
@@ -44,7 +44,7 @@ export async function createCategory(data: {
   projectId: string;
   name: string;
   color?: string;
-}): Promise<ActionResult> {
+}): Promise<ActionResult<Category>> {
   try {
     const parsed = createCategorySchema.safeParse(data);
     if (!parsed.success) {
@@ -71,17 +71,17 @@ export async function createCategory(data: {
     });
     const maxOrder = maxOrderResult[0]?.displayOrder ?? -1;
 
-    await db.insert(categories).values({
+    const [newCategory] = await db.insert(categories).values({
       projectId: parsed.data.projectId,
       name: parsed.data.name,
       color: parsed.data.color ?? null,
       displayOrder: maxOrder + 1,
-    });
+    }).returning();
 
     revalidatePath(`/projects/${parsed.data.projectId}/settings`);
     revalidatePath(`/projects/${parsed.data.projectId}/tasks`);
 
-    return { success: true };
+    return { success: true, data: newCategory };
   } catch (error) {
     const message = error instanceof Error ? error.message : "カテゴリーの作成に失敗しました";
     return { success: false, error: message };

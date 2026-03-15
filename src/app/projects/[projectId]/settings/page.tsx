@@ -14,7 +14,7 @@ type Props = {
   params: Promise<{ projectId: string }>;
 };
 
-/** プロジェクト設定ページ */
+/** リポジトリ設定ページ */
 export default async function SettingsPage({ params }: Props) {
   const { projectId } = await params;
   const [project, statuses, categories, currentUser] = await Promise.all([
@@ -30,9 +30,9 @@ export default async function SettingsPage({ params }: Props) {
 
   return (
     <>
-      <ProjectHeader projectName={project.name} currentPage="プロジェクト設定" />
+      <ProjectHeader projectName={project.name} currentPage="リポジトリ設定" />
       <div className="flex flex-1 flex-col gap-6 p-6">
-        <PageToolbar title="プロジェクト設定" />
+        <PageToolbar title="リポジトリ設定" />
         <ProjectSettingsForm project={project} />
         {currentUser && <AvatarSettings user={currentUser} />}
         <StatusManagement projectId={project.id} statuses={statuses} />
